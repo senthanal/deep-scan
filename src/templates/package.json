@@ -1,0 +1,11 @@
+{
+    "name": "project-scan",
+    "version": "0.0.1",
+    "description": "Project scan is on the run deep ort scan",
+    "scripts": {
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+    }
+}
