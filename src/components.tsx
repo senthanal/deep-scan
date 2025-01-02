@@ -56,5 +56,6 @@ export const PackageForm = () => {
         <button type="submit">Submit</button>
       </fieldset>
     </form>
+    <button hx-get="/clear" hx-target="#status">Clear</button> <span id="status"></span>
   `;
 };

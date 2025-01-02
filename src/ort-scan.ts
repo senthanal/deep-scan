@@ -2,20 +2,33 @@ import { Store } from "./Store";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { PackageJson } from "type-fest";
-import Docker from "dockerode";
-import { buffer, text } from "stream/consumers";
+import Docker, { ContainerInfo } from "dockerode";
+import { getChunks } from "./utils";
 
 export class OrtScan {
+  private readonly containerName = "deep-scan";
   private readonly packagePath = resolve(__dirname, "../", "project-scan");
   private readonly templatePath = resolve(__dirname, "templates");
+  private readonly dockerInstance: Docker;
 
-  public async scan(packageName: string, packageVersion: string): Promise<void> {
+  public constructor() {
+    this.dockerInstance = new Docker({ host: "localhost", port: 2375 });
+  }
+
+  public async scan(
+    packageName: string,
+    packageVersion: string
+  ): Promise<void> {
     this.createPackagePath();
     const packageJson = this.getPackageJson(packageName, packageVersion);
     this.writePackageJson(packageJson);
     this.copyDockerfile();
     this.copyDockerEntry();
+    await this.removeDockerContainer();
     await this.buildDockerImage();
+    await this.runDockerContainer();
+    await this.stopDockerContainer();
+    await this.removeDockerContainer();
   }
 
   private createPackagePath(): void {
@@ -77,20 +90,54 @@ export class OrtScan {
 
   private async buildDockerImage(): Promise<void> {
     Store.getInstance().addMessage(`Building docker image`);
-    const dockerInstance = new Docker({host: "localhost", port: 2375});
-    const stream = await dockerInstance.buildImage({context: this.packagePath, src: ['Dockerfile', 'package.json', 'entrypoint.sh']}, {t: "deep-scan", rm: true});
-    const chunks = await this.getChunks(stream);
+    const stream = await this.dockerInstance.buildImage(
+      {
+        context: this.packagePath,
+        src: ["Dockerfile", "package.json", "entrypoint.sh"],
+      },
+      { t: this.containerName, rm: true, nocache: true }
+    );
+    const chunks = await getChunks(stream);
     const output = chunks.toString("utf8");
     Store.getInstance().addMessage(output, "verbose");
     Store.getInstance().addMessage(`done`);
   }
 
-  private getChunks(stream: NodeJS.ReadableStream): Promise<Buffer> {
-    const chunks: Uint8Array[]  = [];
-    return new Promise((resolve, reject) => {
-      stream.on("data", (chunk) => chunks.push(chunk));
-      stream.on("end", () => resolve(Buffer.concat(chunks)));
-      stream.on("error", (err) => reject(err));
+  private async runDockerContainer(): Promise<void> {
+    Store.getInstance().addMessage(`Running docker container`);
+    await this.dockerInstance.run(this.containerName, [], [], {
+      name: this.containerName,
+      HostConfig: {
+        Binds: [
+          `${this.packagePath}/results:/home/ort/results:rw`,
+        ],
+      },
     });
+    Store.getInstance().addMessage(`done`);
+  }
+
+  private async stopDockerContainer(): Promise<void> {
+    Store.getInstance().addMessage(`Stopping docker container`);
+    const containerInfo = await this.getContainerInfo(this.containerName);
+    if (containerInfo) {
+      const container = this.dockerInstance.getContainer(containerInfo.Id);
+      await container.stop();
+    }
+    Store.getInstance().addMessage(`done`);
+  }
+
+  private async removeDockerContainer(): Promise<void> {
+    Store.getInstance().addMessage(`Removing docker container`);
+    const containerInfo = await this.getContainerInfo(this.containerName);
+    if (containerInfo) {
+      const container = this.dockerInstance.getContainer(containerInfo.Id);
+      await container.remove();
+    }
+    Store.getInstance().addMessage(`done`);
+  }
+
+  private async getContainerInfo(name: string): Promise<ContainerInfo | undefined> {
+    const containers = await this.dockerInstance.listContainers();
+    return containers.find((container) => container.Names.includes(name));
   }
 }

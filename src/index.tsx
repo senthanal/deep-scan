@@ -38,6 +38,11 @@ app.get("/notifications", async (c) => {
   });
 });
 
+app.get("/clear", async (c) => {
+  Store.getInstance().clearMessages();
+  return c.text("Messages cleared");
+});
+
 app.post("/package", async (c) => {
   const { name, version } = await c.req.parseBody();
   await ortScan.scan(name as string, version as string);

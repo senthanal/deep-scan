@@ -1,7 +1,8 @@
 {
   "name": "deep-scan",
   "scripts": {
-    "dev": "bunx run --hot src/index.tsx"
+    "dev": "bunx run --hot src/index.tsx",
+    "debug": "bunx run --inspect --hot src/index.tsx"
   },
   "dependencies": {
     "dockerode": "^4.0.2",
