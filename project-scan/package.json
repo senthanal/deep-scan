@@ -4,7 +4,7 @@
   "description": "Project scan is on the run deep ort scan",
   "scripts": {},
   "dependencies": {
-    "ckeditor4": "4.21.0"
+    "ckeditor4": "4.22.0"
   },
   "devDependencies": {}
 }

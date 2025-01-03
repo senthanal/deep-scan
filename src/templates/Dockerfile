@@ -1,9 +1,9 @@
-FROM ghcr.io/oss-review-toolkit/ort-minimal:39.0.0
+FROM ghcr.io/oss-review-toolkit/ort-minimal:44.0.0
 
 WORKDIR $HOME
-RUN mkdir -p $HOME/.ort/config && git clone https://github.com/senthanal/ort-config.git $HOME/.ort/config
-COPY entrypoint.sh $HOME/entrypoint.sh
-COPY package.json $HOME/package.json
+RUN mkdir -p "$HOME/.ort/config" && git clone https://github.com/senthanal/ort-config.git "$HOME/.ort/config"
+COPY --chmod=0755 --chown=ort entrypoint.sh .
+COPY --chown=ort package.json .
+RUN sed -i -e 's/\r$//' ./entrypoint.sh
 
-CMD ["/bin/bash","-c","./entrypoint.sh"]
-#ENTRYPOINT ["/bin/echo", "Hello >> /home/ort/results/ort-report.txt"]
+ENTRYPOINT ["./entrypoint.sh"]
