@@ -1,6 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { CmdResponse } from "./types";
 import { Store } from "./Store";
+import { readFileSync } from "node:fs";
+import { parseDocument } from "yaml";
 
 /**
  * Checks if there is an error from running a command, and if there is, adds a message
@@ -29,3 +31,20 @@ export function cmd(command: string): CmdResponse {
     env: process.env
   });
 }
+
+export function fileToYaml(filePath: string): string | undefined {
+  Store.getInstance().addMessage(`Reading file: ${filePath}`);
+  let yamlString: string | undefined;
+  try {
+    yamlString = readFileSync(filePath, "utf8");
+  } catch (error) {
+    Store.getInstance().addMessage(`Error reading file: ${filePath}`);
+  }
+  return yamlString;
+}
+
+export function yamlToJson(fileContent: string): any {
+  const yamlContent = parseDocument(fileContent);
+  return yamlContent.toJSON();
+}
+

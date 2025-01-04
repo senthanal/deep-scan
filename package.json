@@ -2,10 +2,13 @@
   "name": "deep-scan",
   "scripts": {
     "dev": "bunx run --hot src/index.tsx",
-    "debug": "bunx run --inspect --hot src/index.tsx"
+    "debug": "bunx run --inspect --hot src/index.tsx",
+    "test:dev": "bunx test --watch",
+    "test": "bunx test"
   },
   "dependencies": {
-    "hono": "^4.6.13"
+    "hono": "^4.6.13",
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

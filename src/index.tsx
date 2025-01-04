@@ -4,6 +4,7 @@ import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
 import { Store } from "./Store";
 import { OrtScan } from "./ort-scan";
+import { ViolationsStore } from "./ViolationsStore";
 
 const app = new Hono<{ Bindings: Bindings }>();
 const ortScan = new OrtScan();
@@ -38,8 +39,19 @@ app.get("/notifications", async (c) => {
   });
 });
 
+app.get("/violations", async (c) => {
+  return streamSSE(c, async (stream) => {
+    await stream.writeSSE({
+      data: ViolationsStore.getInstance().toString(),
+      event: "violations-update",
+      id: String(new Date().getTime()),
+    });
+  });
+});
+
 app.get("/clear", async (c) => {
   Store.getInstance().clearMessages();
+  ViolationsStore.getInstance().clearMessages();
   return c.text("Messages cleared");
 });
 

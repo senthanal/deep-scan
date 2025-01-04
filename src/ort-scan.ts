@@ -2,7 +2,8 @@ import { Store } from "./Store";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { PackageJson } from "type-fest";
-import { checkCmdError, cmd } from "./utils";
+import { checkCmdError, cmd, fileToYaml, yamlToJson } from "./utils";
+import { ViolationsStore } from "./ViolationsStore";
 
 export class OrtScan {
   private readonly containerName = "deep-scan";
@@ -34,6 +35,7 @@ export class OrtScan {
     this.startDockerContainer();
     this.stopDockerContainer();
     this.removeDockerContainer();
+    this.checkViolations();
   }
 
   /**
@@ -205,5 +207,21 @@ export class OrtScan {
     const listContainerCommand = ` docker container ls --all --quiet --filter "name=${this.containerName}"`;
     const response = cmd(listContainerCommand);
     return response.stdout.trim() !== "";
+  }
+
+  private checkViolations(): void {
+    Store.getInstance().addMessage(`Checking for violations`);
+    const evaluationFilePath = join(this.packagePath, "evaluation-result.yml");
+    const evaluationYaml = fileToYaml(evaluationFilePath);
+    const evaluationJson = yamlToJson(evaluationYaml ?? "");
+    const violations = evaluationJson.evaluator.violations;
+    if (violations.length > 0) {
+      Store.getInstance().addMessage(`Violations found`);
+      ViolationsStore.getInstance().addMessage(`Violations found`);
+    } else {
+      Store.getInstance().addMessage(`No violations found`);
+      ViolationsStore.getInstance().addMessage(`No violations found`);
+    }
+    Store.getInstance().addMessage(`done`);
   }
 }

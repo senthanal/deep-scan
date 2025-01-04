@@ -56,6 +56,15 @@ export const PackageForm = () => {
         <button type="submit">Submit</button>
       </fieldset>
     </form>
+    <p>
+      <mark
+      id="violations"
+          class="container"
+          hx-ext="sse"
+          sse-connect="/violations"
+          sse-swap="violations-update"
+        >Violations found</mark>
+    </p>
     <button hx-get="/clear" hx-target="#status">Clear</button> <span id="status"></span>
   `;
 };
