@@ -56,9 +56,9 @@ app.get("/clear", async (c) => {
 });
 
 app.post("/package", async (c) => {
-  const { name, version } = await c.req.parseBody();
-  await ortScan.scan(name as string, version as string);
-  return c.json({ name, version });
+  const { name, version, ortConfigRepo } = await c.req.parseBody();
+  await ortScan.scan(name as string, version as string, ortConfigRepo as string);
+  return c.json({ name, version, ortConfigRepo });
 });
 
 export default app;

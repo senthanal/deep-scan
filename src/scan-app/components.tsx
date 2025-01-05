@@ -25,7 +25,8 @@ export const renderer = jsxRenderer(({ children }) => {
           hx-ext="sse"
           sse-connect="/notifications"
           sse-swap="process-update"
-        >Process log goes here...
+        >
+          Process log goes here...
         </main>
       </body>
     </html>
@@ -53,18 +54,30 @@ export const PackageForm = () => {
           aria-label="Package Version"
           name="version"
         />
+      </fieldset>
+      <fieldset class="grid">
+        <input
+          type="url"
+          value="https://github.com/senthanal/ort-config.git"
+          placeholder="Git clone repo url for the ORT config"
+          aria-label="Git clone repo url"
+          name="ortConfigRepo"
+        />
+      </fieldset>
+      <fieldset class="grid">
         <button type="submit">Submit</button>
+        <button type="reset" hx-get="/clear" hx-target="#status">Clear</button>
       </fieldset>
     </form>
     <p>
       <mark
-      id="violations"
-          class="container"
-          hx-ext="sse"
-          sse-connect="/violations"
-          sse-swap="violations-update"
-        >Violations found</mark>
+        id="violations"
+        class="container"
+        hx-ext="sse"
+        sse-connect="/violations"
+        sse-swap="violations-update"
+        >Violations found</mark
+      >
     </p>
-    <button hx-get="/clear" hx-target="#status">Clear</button> <span id="status"></span>
   `;
 };

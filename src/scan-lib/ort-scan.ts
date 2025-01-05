@@ -21,12 +21,14 @@ export class OrtScan {
    */
   public async scan(
     packageName: string,
-    packageVersion: string
+    packageVersion: string,
+    ortConfigRepo = 'https://github.com/senthanal/ort-config.git'
   ): Promise<void> {
     this.createPackagePath();
     const packageJson = this.getPackageJson(packageName, packageVersion);
     this.writePackageJson(packageJson);
     this.copyDockerfile();
+    this.updateOrtConfigRepo(ortConfigRepo);
     this.copyDockerEntry();
     this.buildDockerImage();
     this.stopDockerContainer();
@@ -108,6 +110,17 @@ export class OrtScan {
       path,
       readFileSync(join(this.templatePath, "Dockerfile"), "utf8")
     );
+    Store.getInstance().addMessage(`done`);
+  }
+
+  private updateOrtConfigRepo(ortConfigRepo: string): void {
+    Store.getInstance().addMessage(`Updating ORT config repo to ${ortConfigRepo}`);
+    const path = join(this.packagePath, "Dockerfile");
+    const dockerfile = readFileSync(path, "utf8");
+    const updatedDockerfile = dockerfile.replace( "${ort-config-repo}",
+      "https://github.com/senthanal/ort-config.git"
+    );
+    writeFileSync(path, updatedDockerfile);
     Store.getInstance().addMessage(`done`);
   }
 
