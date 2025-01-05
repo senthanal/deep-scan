@@ -9,8 +9,8 @@
     "email": "senthanal@gmail.com"
   },
   "scripts": {
-    "start": "bunx run --hot src/index.tsx",
-    "debug": "bunx run --inspect --hot src/index.tsx",
+    "start": "bunx run --hot src/scan-app/index.tsx",
+    "debug": "bunx run --inspect --hot src/scan-app/index.tsx",
     "test:dev": "bunx test --watch",
     "test": "bunx test"
   },

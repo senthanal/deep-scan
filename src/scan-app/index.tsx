@@ -2,9 +2,9 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
-import { Store } from "./scan-lib/Store";
-import { OrtScan } from "./scan-lib/ort-scan";
-import { ViolationsStore } from "./scan-lib/ViolationsStore";
+import { Store } from "../scan-lib/Store";
+import { OrtScan } from "../scan-lib/ort-scan";
+import { ViolationsStore } from "../scan-lib/ViolationsStore";
 
 const app = new Hono<{ Bindings: Bindings }>();
 const ortScan = new OrtScan();
