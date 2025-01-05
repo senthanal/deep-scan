@@ -1,7 +1,15 @@
 {
   "name": "deep-scan",
+  "version": "0.0.1",
+  "description": "Deep scan for the web",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Senthanal Sirpi Manohar",
+    "email": "senthanal@gmail.com"
+  },
   "scripts": {
-    "dev": "bunx run --hot src/index.tsx",
+    "start": "bunx run --hot src/index.tsx",
     "debug": "bunx run --inspect --hot src/index.tsx",
     "test:dev": "bunx test --watch",
     "test": "bunx test"
