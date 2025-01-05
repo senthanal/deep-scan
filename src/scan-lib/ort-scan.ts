@@ -7,7 +7,7 @@ import { ViolationsStore } from "./ViolationsStore";
 
 export class OrtScan {
   private readonly containerName = "deep-scan";
-  private readonly packagePath = resolve(__dirname, "../", "project-scan");
+  private readonly packagePath = resolve(__dirname, "../../", "project-scan");
   private readonly templatePath = resolve(__dirname, "templates");
 
   /**
