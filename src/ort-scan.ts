@@ -213,7 +213,11 @@ export class OrtScan {
     Store.getInstance().addMessage(`Checking for violations`);
     const evaluationFilePath = join(this.packagePath, "evaluation-result.yml");
     const evaluationYaml = fileToYaml(evaluationFilePath);
-    const evaluationJson = yamlToJson(evaluationYaml ?? "");
+    if(!evaluationYaml) {
+      Store.getInstance().addMessage(`No evaluation result found`);
+      return;
+    }
+    const evaluationJson = yamlToJson(evaluationYaml);
     const violations = evaluationJson.evaluator.violations;
     if (violations.length > 0) {
       Store.getInstance().addMessage(`Violations found`);
