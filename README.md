@@ -6,6 +6,10 @@ A node app to scan and report license violations for the given npm package using
 
 Typical scenario, ORT provides possibility of setting up the company software auditing policies. Running such a ORT scan in every PR commit increases build pipeline runtime drastically. Ideally, we would like to evaluate desired npm package against those company policies before using them.
 
+## Architecture
+
+[Application Architecture Diagram](./documentation/application_architecture_diagram.drawio.png)
+
 ## Getting Started
 
 ### Prerequisites
