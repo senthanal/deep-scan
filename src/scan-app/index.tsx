@@ -4,7 +4,6 @@ import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
 import { ScanLogger } from "../scan-lib/ScanLogger";
 import { OrtScan } from "../scan-lib/ort-scan";
-import { ViolationsStore } from "../scan-lib/ViolationsStore";
 
 const app = new Hono<{ Bindings: Bindings }>();
 const logger = new ScanLogger();
@@ -33,7 +32,7 @@ app.get("/", (c) => {
 app.get("/notifications", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: logger.formatLogAsString(),
+      data: logger.formatTaskLogAsString(),
       event: "process-update",
       id: String(new Date().getTime()),
     });
@@ -43,7 +42,7 @@ app.get("/notifications", async (c) => {
 app.get("/violations", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: ViolationsStore.getInstance().toString(),
+      data: logger.formatViolationLogAsString(),
       event: "violations-update",
       id: String(new Date().getTime()),
     });
@@ -52,7 +51,6 @@ app.get("/violations", async (c) => {
 
 app.get("/clear", async (c) => {
   logger.resetLog();
-  ViolationsStore.getInstance().clearMessages();
   return c.text("Messages cleared");
 });
 

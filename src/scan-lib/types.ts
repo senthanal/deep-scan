@@ -22,7 +22,7 @@ export type ContainerInfo = {
 
 export type Violation = {
   rule: string;
-  package: string;
+  packageName: string;
   license: string;
   licenseSource: string;
   severity: string;

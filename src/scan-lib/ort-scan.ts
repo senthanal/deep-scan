@@ -2,8 +2,7 @@ import { ScanLogger } from "./ScanLogger";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { PackageJson } from "type-fest";
-import { checkCmdError, cmd, fileToYaml, getTask, yamlToJson } from "./utils";
-import { ViolationsStore } from "./ViolationsStore";
+import { checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson } from "./utils";
 
 export class OrtScan {
   private readonly containerName = "deep-scan";
@@ -267,11 +266,9 @@ export class OrtScan {
     }
     const evaluationJson = yamlToJson(evaluationYaml);
     const violations = evaluationJson.evaluator.violations;
-    if (violations.length > 0) {
-      ViolationsStore.getInstance().addMessage(`Violations found`);
-    } else {
-      ViolationsStore.getInstance().addMessage(`No violations found`);
-    }
+    violations.forEach((violation: any) => {
+      this.logger.addLog(getViolation(violation.rule, violation.packageName, violation.license, violation.licenseSource, violation.severity, violation.message));
+    });
     this.logger.addLog(getTask(taskId, `done`, "Completed"));
   }
 }

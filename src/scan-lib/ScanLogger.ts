@@ -9,17 +9,33 @@ export class ScanLogger {
     this.scanLog.violations = violations;
   }
   public addLog<T extends object>(log: T): void {
-    if ("id" in log) {
+    if (this.isTaskLog(log)) {
       this.scanLog.messages = updateTask(this.scanLog.messages, log as unknown as Task);
+    }
+    if (this.isViolationLog(log)) {
+      this.scanLog.violations.push(log as unknown as Violation);
     }
   }
   public resetLog(): void {
     this.scanLog.messages = [];
+    this.scanLog.violations = [];
   }
-  public hasNoLogs(): boolean {
+  public hasNoTaskLogs(): boolean {
     return this.scanLog.messages.length === 0;
   }
-  public formatLogAsString(separator = "<br>"): string {
+  public formatTaskLogAsString(separator = "<br>"): string {
     return this.scanLog.messages.map(m=>m.name).join(separator);
+  }
+
+  public formatViolationLogAsString(separator = "<br>"): string {
+    return this.scanLog.violations.map(m=>`(${m.severity})${m.rule}: ${m.message}`).join(separator);
+  }
+
+  private isTaskLog<T extends object>(log: T): boolean {
+    return "id" in log;
+  }
+
+  private isViolationLog<T extends object>(log: T): boolean {
+    return "rule" in log;
   }
 }

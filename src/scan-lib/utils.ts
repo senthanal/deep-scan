@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { CmdResponse, Task, TaskStatus } from "./types";
+import { CmdResponse, Task, TaskStatus, Violation } from "./types";
 import { readFileSync } from "node:fs";
 import { parseDocument } from "yaml";
 
@@ -67,3 +67,8 @@ export function updateTask(tasks: Task[], task: Task): Task[] {
 export function getTask(id: number, name: string, status: TaskStatus = 'In Progress'): Task {
   return { id, name, status };
 }
+
+export function getViolation(rule: string, packageName: string, license: string, licenseSource: string, severity: string, message: string): Violation {
+  return { rule, packageName, license, licenseSource, severity, message };
+}
+
