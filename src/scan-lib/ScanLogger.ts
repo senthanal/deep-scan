@@ -1,19 +1,18 @@
-import { Message, ScanLog, Violation } from "./types";
+import { Task, ScanLog, Violation, TaskStatus } from './types';
+import { updateTask } from './utils';
 
 export class ScanLogger {
   private static instance: ScanLogger;
 
   scanLog: ScanLog = { messages: [], violations: [] };
 
-  message: string[] = [];
-  messageType: "info" | "error" | "verbose" = "info";
-  constructor(messages: Message[] = [], violations: Violation[] = []) {
+  constructor(messages: Task[] = [], violations: Violation[] = []) {
     this.scanLog.messages = messages;
     this.scanLog.violations = violations;
   }
-  public addMessage(message: string, type = "info"): void {
-    const messageObj = { message, type } as Message;
-    this.scanLog.messages.push(messageObj);
+  public addMessage(id: number, name: string, status: TaskStatus = 'In Progress'): void {
+    const task = { id, name, status } as Task;
+    this.scanLog.messages = updateTask(this.scanLog.messages, task);
   }
   public clearMessages(): void {
     this.scanLog.messages = [];
@@ -22,7 +21,7 @@ export class ScanLogger {
     return this.scanLog.messages.length === 0;
   }
   public formatMessageAsString(separator = "<br>"): string {
-    return this.scanLog.messages.map(m=>m.message).join(separator);
+    return this.scanLog.messages.map(m=>m.name).join(separator);
   }
 
   public static getInstance(): ScanLogger {

@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { CmdResponse } from "./types";
-import { ScanLogger } from "./ScanLogger";
+import { CmdResponse, Task } from "./types";
 import { readFileSync } from "node:fs";
 import { parseDocument } from "yaml";
 
@@ -9,10 +8,11 @@ import { parseDocument } from "yaml";
  * to the store with the error
  * @param response the response from running the command
  */
-export function checkCmdError(response: CmdResponse): void {
+export function checkCmdError(response: CmdResponse): string | undefined {
   if (response.stderr) {
-    ScanLogger.getInstance().addMessage(response.stderr.split("\n").join("<br>"));
+    return response.stderr.split("\n").join("<br>");
   }
+  return undefined;
 }
 
 /**
@@ -21,23 +21,21 @@ export function checkCmdError(response: CmdResponse): void {
  * @returns the response from running the command
  */
 export function cmd(command: string): CmdResponse {
-  ScanLogger.getInstance().addMessage(`Running command: ${command}`);
-  return spawnSync(command,{
+  return spawnSync(command, {
     shell: true,
     stdio: "pipe",
     cwd: process.cwd(),
     encoding: "utf-8",
-    env: process.env
+    env: process.env,
   });
 }
 
 export function fileToYaml(filePath: string): string | undefined {
-  ScanLogger.getInstance().addMessage(`Reading file: ${filePath}`);
   let yamlString: string | undefined;
   try {
     yamlString = readFileSync(filePath, "utf8");
   } catch (error) {
-    ScanLogger.getInstance().addMessage(`Error reading file: ${filePath}`);
+    console.error(`Error reading file: ${filePath}`);
   }
   return yamlString;
 }
@@ -47,3 +45,21 @@ export function yamlToJson(fileContent: string): any {
   return yamlContent.toJSON();
 }
 
+export function updateTask(tasks: Task[], task: Task): Task[] {
+  let foundTask = tasks.find((t) => t.id === task.id);
+  if (foundTask) {
+    return tasks.map((t) => {
+      if (t.id === task.id) {
+        const updatedTask: Task = {
+          id: task.id,
+          name: `${t.name}...${task.name}`,
+          status: task.status,
+        };
+        return updatedTask;
+      }
+      return t;
+    });
+  }
+  tasks.push(task);
+  return tasks;
+}

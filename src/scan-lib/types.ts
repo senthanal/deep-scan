@@ -29,13 +29,16 @@ export type Violation = {
   message: string;
 };
 
-export type Message = {
-  message: string;
-  type: string;
+export type TaskStatus = 'Not Started' | 'In Progress' | 'Completed' | 'Failed';
+
+export type Task = {
+  id: number;
+  name: string;
+  status: TaskStatus;
 };
 
 export type ScanLog = {
-  messages: Message[];
+  messages: Task[];
   violations: Violation[];
 };
 
