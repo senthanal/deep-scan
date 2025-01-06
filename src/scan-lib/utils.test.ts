@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { fileToYaml, yamlToJson } from "./utils";
-import { resolve } from "node:path";
+import { resolve, join } from "node:path";
 
-const testDataPath = resolve(__dirname, "test-data");
+const testDataPath = join(__dirname, "../", "test-data");
 const evaluationResultPath = resolve(testDataPath, "evaluation-result.yml");
 
 test("2 + 2", () => {

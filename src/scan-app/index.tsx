@@ -32,7 +32,7 @@ app.get("/", (c) => {
 app.get("/notifications", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: ScanLogger.getInstance().formatMessageAsString(),
+      data: ScanLogger.getInstance().formatLogAsString(),
       event: "process-update",
       id: String(new Date().getTime()),
     });
@@ -50,7 +50,7 @@ app.get("/violations", async (c) => {
 });
 
 app.get("/clear", async (c) => {
-  ScanLogger.getInstance().clearMessages();
+  ScanLogger.getInstance().resetLog();
   ViolationsStore.getInstance().clearMessages();
   return c.text("Messages cleared");
 });
