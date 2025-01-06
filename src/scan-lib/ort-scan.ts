@@ -10,6 +10,11 @@ export class OrtScan {
   private readonly packagePath = resolve(__dirname, "../../", "project-scan");
   private readonly templatePath = resolve(__dirname, "templates");
   private taskCounter = 0;
+  private logger: ScanLogger;
+
+  public constructor(logger: ScanLogger) {
+    this.logger = logger;
+  }
 
   /**
    * Scans the given package and version with the ORT tool. This will create a
@@ -57,20 +62,20 @@ export class OrtScan {
   private createPackagePath(): void {
     const taskId = this.getTaskId();
     if (existsSync(this.packagePath)) {
-      ScanLogger.getInstance().addLog(
+      this.logger.addLog(
         taskId,
         `Cleaning scan project directory`
       );
       rmSync(this.packagePath, { recursive: true });
-      ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+      this.logger.addLog(taskId, `done`, "Completed");
     }
     const nextTaskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       nextTaskId,
       `Creating scan project directory`
     );
     mkdirSync(this.packagePath);
-    ScanLogger.getInstance().addLog(nextTaskId, `done`);
+    this.logger.addLog(nextTaskId, `done`);
   }
 
   /**
@@ -86,7 +91,7 @@ export class OrtScan {
   ): PackageJson {
     const taskId = this.getTaskId();
     const msg = `Adding ${packageName}@${packageVersion} to the scan project dependencies`;
-    ScanLogger.getInstance().addLog(taskId, msg);
+    this.logger.addLog(taskId, msg);
     const packageJson = JSON.parse(
       readFileSync(join(this.templatePath, "package.json"), "utf8")
     ) as PackageJson;
@@ -94,7 +99,7 @@ export class OrtScan {
       ...packageJson.dependencies,
       [packageName]: packageVersion,
     };
-    ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+    this.logger.addLog(taskId, `done`, "Completed");
     return packageJson;
   }
 
@@ -108,14 +113,14 @@ export class OrtScan {
    */
   private writePackageJson(packageJson: PackageJson): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       `Writing package json to the scan project`
     );
     const content = JSON.stringify(packageJson, null, 2);
     const path = join(this.packagePath, "package.json");
     writeFileSync(path, content);
-    ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+    this.logger.addLog(taskId, `done`, "Completed");
   }
 
   /**
@@ -126,7 +131,7 @@ export class OrtScan {
    */
   private copyDockerfile(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       `Copying Dockerfile to the scan project`
     );
@@ -135,7 +140,7 @@ export class OrtScan {
       path,
       readFileSync(join(this.templatePath, "Dockerfile"), "utf8")
     );
-    ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+    this.logger.addLog(taskId, `done`, "Completed");
   }
 
   /**
@@ -144,7 +149,7 @@ export class OrtScan {
    */
   private updateOrtConfigRepo(ortConfigRepo: string): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       `Updating ORT config repo to ${ortConfigRepo}`
     );
@@ -155,7 +160,7 @@ export class OrtScan {
       "https://github.com/senthanal/ort-config.git"
     );
     writeFileSync(path, updatedDockerfile);
-    ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+    this.logger.addLog(taskId, `done`, "Completed");
   }
 
   /**
@@ -165,7 +170,7 @@ export class OrtScan {
    */
   private copyDockerEntry(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       `Copying entrypoint.sh to the scan project`
     );
@@ -174,7 +179,7 @@ export class OrtScan {
       path,
       readFileSync(join(this.templatePath, "entrypoint.sh"), "utf8")
     );
-    ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+    this.logger.addLog(taskId, `done`, "Completed");
   }
 
   /**
@@ -183,13 +188,13 @@ export class OrtScan {
    */
   private buildDockerImage(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(taskId, `Building docker image`);
+    this.logger.addLog(taskId, `Building docker image`);
     const buildImageCommand = `docker image build --quiet --no-cache --tag ${
       this.containerName
     } ${resolve(this.packagePath)}`;
     const response = cmd(buildImageCommand);
     const error = checkCmdError(response);
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       error ?? `done`,
       error ? "Failed" : "Completed"
@@ -205,13 +210,13 @@ export class OrtScan {
    */
   private createDockerContainer(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(taskId, `Creating docker container`);
+    this.logger.addLog(taskId, `Creating docker container`);
     const createContainerCommand = `docker container create --volume ${join(
       this.packagePath
     )}:/home/ort/results:rw --name ${this.containerName} ${this.containerName}`;
     const response = cmd(createContainerCommand);
     const error = checkCmdError(response);
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       error ?? `done`,
       error ? "Failed" : "Completed"
@@ -225,11 +230,11 @@ export class OrtScan {
    */
   private startDockerContainer(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(taskId, `Running docker container`);
+    this.logger.addLog(taskId, `Running docker container`);
     const startContainerCommand = `docker container start --interactive ${this.containerName}`;
     const response = cmd(startContainerCommand);
     const error = checkCmdError(response);
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       error ?? `done`,
       error ? "Failed" : "Completed"
@@ -242,7 +247,7 @@ export class OrtScan {
    */
   private stopDockerContainer(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(taskId, `Stopping docker container`);
+    this.logger.addLog(taskId, `Stopping docker container`);
     const exists = this.existsDockerContainer();
     let error;
     if (exists) {
@@ -250,7 +255,7 @@ export class OrtScan {
       const response = cmd(stopContainerCommand);
       error = checkCmdError(response);
     }
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       error ?? `done`,
       error ? "Failed" : "Completed"
@@ -263,7 +268,7 @@ export class OrtScan {
    */
   private removeDockerContainer(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(taskId, `Removing docker container`);
+    this.logger.addLog(taskId, `Removing docker container`);
     const exists = this.existsDockerContainer();
     let error;
     if (exists) {
@@ -271,7 +276,7 @@ export class OrtScan {
       const response = cmd(removeContainerCommand);
       error = checkCmdError(response);
     }
-    ScanLogger.getInstance().addLog(
+    this.logger.addLog(
       taskId,
       error ?? `done`,
       error ? "Failed" : "Completed"
@@ -291,11 +296,11 @@ export class OrtScan {
    */
   private checkViolations(): void {
     const taskId = this.getTaskId();
-    ScanLogger.getInstance().addLog(taskId, `Checking for violations`);
+    this.logger.addLog(taskId, `Checking for violations`);
     const evaluationFilePath = join(this.packagePath, "evaluation-result.yml");
     const evaluationYaml = fileToYaml(evaluationFilePath);
     if (!evaluationYaml) {
-      ScanLogger.getInstance().addLog(
+      this.logger.addLog(
         taskId,
         `No evaluation result found`,
         "Failed"
@@ -309,6 +314,6 @@ export class OrtScan {
     } else {
       ViolationsStore.getInstance().addMessage(`No violations found`);
     }
-    ScanLogger.getInstance().addLog(taskId, `done`, "Completed");
+    this.logger.addLog(taskId, `done`, "Completed");
   }
 }

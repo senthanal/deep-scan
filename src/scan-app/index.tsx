@@ -7,7 +7,8 @@ import { OrtScan } from "../scan-lib/ort-scan";
 import { ViolationsStore } from "../scan-lib/ViolationsStore";
 
 const app = new Hono<{ Bindings: Bindings }>();
-const ortScan = new OrtScan();
+const logger = new ScanLogger();
+const ortScan = new OrtScan(logger);
 
 app.use("/notify/*", async (c, next) => {
   c.header("Content-Type", "text/event-stream");
@@ -32,7 +33,7 @@ app.get("/", (c) => {
 app.get("/notifications", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: ScanLogger.getInstance().formatLogAsString(),
+      data: logger.formatLogAsString(),
       event: "process-update",
       id: String(new Date().getTime()),
     });
@@ -50,7 +51,7 @@ app.get("/violations", async (c) => {
 });
 
 app.get("/clear", async (c) => {
-  ScanLogger.getInstance().resetLog();
+  logger.resetLog();
   ViolationsStore.getInstance().clearMessages();
   return c.text("Messages cleared");
 });

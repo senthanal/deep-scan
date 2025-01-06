@@ -2,8 +2,6 @@ import { Task, ScanLog, Violation, TaskStatus } from './types';
 import { updateTask } from './utils';
 
 export class ScanLogger {
-  private static instance: ScanLogger;
-
   scanLog: ScanLog = { messages: [], violations: [] };
 
   constructor(messages: Task[] = [], violations: Violation[] = []) {
@@ -22,12 +20,5 @@ export class ScanLogger {
   }
   public formatLogAsString(separator = "<br>"): string {
     return this.scanLog.messages.map(m=>m.name).join(separator);
-  }
-
-  public static getInstance(): ScanLogger {
-    if (!ScanLogger.instance) {
-      ScanLogger.instance = new ScanLogger();
-    }
-    return ScanLogger.instance;
   }
 }
