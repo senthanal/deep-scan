@@ -19,3 +19,24 @@ export type ContainerInfo = {
   State: string;
   Status: string;
 };
+
+export type Violation = {
+  rule: string;
+  package: string;
+  license: string;
+  licenseSource: string;
+  severity: string;
+  message: string;
+};
+
+export type Message = {
+  message: string;
+  type: string;
+};
+
+export type ScanLog = {
+  messages: Message[];
+  violations: Violation[];
+};
+
+

@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { CmdResponse } from "./types";
-import { Store } from "./Store";
+import { ScanLogger } from "./ScanLogger";
 import { readFileSync } from "node:fs";
 import { parseDocument } from "yaml";
 
@@ -8,11 +8,10 @@ import { parseDocument } from "yaml";
  * Checks if there is an error from running a command, and if there is, adds a message
  * to the store with the error
  * @param response the response from running the command
- * @param dockerCmdOutput the output of the docker command
  */
-export function checkCmdError(response: CmdResponse, dockerCmdOutput: string): void {
+export function checkCmdError(response: CmdResponse): void {
   if (response.stderr) {
-    Store.getInstance().addMessage(response.stderr.split("\n").join("<br>"));
+    ScanLogger.getInstance().addMessage(response.stderr.split("\n").join("<br>"));
   }
 }
 
@@ -22,7 +21,7 @@ export function checkCmdError(response: CmdResponse, dockerCmdOutput: string): v
  * @returns the response from running the command
  */
 export function cmd(command: string): CmdResponse {
-  Store.getInstance().addMessage(`Running command: ${command}`);
+  ScanLogger.getInstance().addMessage(`Running command: ${command}`);
   return spawnSync(command,{
     shell: true,
     stdio: "pipe",
@@ -33,12 +32,12 @@ export function cmd(command: string): CmdResponse {
 }
 
 export function fileToYaml(filePath: string): string | undefined {
-  Store.getInstance().addMessage(`Reading file: ${filePath}`);
+  ScanLogger.getInstance().addMessage(`Reading file: ${filePath}`);
   let yamlString: string | undefined;
   try {
     yamlString = readFileSync(filePath, "utf8");
   } catch (error) {
-    Store.getInstance().addMessage(`Error reading file: ${filePath}`);
+    ScanLogger.getInstance().addMessage(`Error reading file: ${filePath}`);
   }
   return yamlString;
 }

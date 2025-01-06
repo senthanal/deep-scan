@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
-import { Store } from "../scan-lib/Store";
+import { ScanLogger } from "../scan-lib/ScanLogger";
 import { OrtScan } from "../scan-lib/ort-scan";
 import { ViolationsStore } from "../scan-lib/ViolationsStore";
 
@@ -32,7 +32,7 @@ app.get("/", (c) => {
 app.get("/notifications", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: Store.getInstance().toString(),
+      data: ScanLogger.getInstance().formatMessageAsString(),
       event: "process-update",
       id: String(new Date().getTime()),
     });
@@ -50,7 +50,7 @@ app.get("/violations", async (c) => {
 });
 
 app.get("/clear", async (c) => {
-  Store.getInstance().clearMessages();
+  ScanLogger.getInstance().clearMessages();
   ViolationsStore.getInstance().clearMessages();
   return c.text("Messages cleared");
 });

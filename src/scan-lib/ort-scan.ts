@@ -1,4 +1,4 @@
-import { Store } from "./Store";
+import { ScanLogger } from "./ScanLogger";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { PackageJson } from "type-fest";
@@ -48,14 +48,14 @@ export class OrtScan {
    */
   private createPackagePath(): void {
     if (existsSync(this.packagePath)) {
-      Store.getInstance().addMessage(`Scan project directory already exists`);
-      Store.getInstance().addMessage(`Cleaning scan project directory`);
+      ScanLogger.getInstance().addMessage(`Scan project directory already exists`);
+      ScanLogger.getInstance().addMessage(`Cleaning scan project directory`);
       rmSync(this.packagePath, { recursive: true });
-      Store.getInstance().addMessage(`done`);
+      ScanLogger.getInstance().addMessage(`done`);
     }
-    Store.getInstance().addMessage(`Creating scan project directory`);
+    ScanLogger.getInstance().addMessage(`Creating scan project directory`);
     mkdirSync(this.packagePath);
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   /**
@@ -73,7 +73,7 @@ export class OrtScan {
     packageVersion: string
   ): PackageJson {
     const msg = `Adding ${packageName}@${packageVersion} to the scan project dependencies`;
-    Store.getInstance().addMessage(msg);
+    ScanLogger.getInstance().addMessage(msg);
     const packageJson = JSON.parse(
       readFileSync(join(this.templatePath, "package.json"), "utf8")
     ) as PackageJson;
@@ -81,7 +81,7 @@ export class OrtScan {
       ...packageJson.dependencies,
       [packageName]: packageVersion,
     };
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
     return packageJson;
   }
 
@@ -90,11 +90,11 @@ export class OrtScan {
    * @param packageJson - The package json to write.
    */
   private writePackageJson(packageJson: PackageJson): void {
-    Store.getInstance().addMessage(`Writing package json to the scan project`);
+    ScanLogger.getInstance().addMessage(`Writing package json to the scan project`);
     const content = JSON.stringify(packageJson, null, 2);
     const path = join(this.packagePath, "package.json");
     writeFileSync(path, content);
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   /**
@@ -104,24 +104,24 @@ export class OrtScan {
    * package.json file.
    */
   private copyDockerfile(): void {
-    Store.getInstance().addMessage(`Copying Dockerfile to the scan project`);
+    ScanLogger.getInstance().addMessage(`Copying Dockerfile to the scan project`);
     const path = join(this.packagePath, "Dockerfile");
     writeFileSync(
       path,
       readFileSync(join(this.templatePath, "Dockerfile"), "utf8")
     );
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   private updateOrtConfigRepo(ortConfigRepo: string): void {
-    Store.getInstance().addMessage(`Updating ORT config repo to ${ortConfigRepo}`);
+    ScanLogger.getInstance().addMessage(`Updating ORT config repo to ${ortConfigRepo}`);
     const path = join(this.packagePath, "Dockerfile");
     const dockerfile = readFileSync(path, "utf8");
     const updatedDockerfile = dockerfile.replace( "${ort-config-repo}",
       "https://github.com/senthanal/ort-config.git"
     );
     writeFileSync(path, updatedDockerfile);
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   /**
@@ -131,13 +131,13 @@ export class OrtScan {
    * the package.json file.
    */
   private copyDockerEntry(): void {
-    Store.getInstance().addMessage(`Copying entrypoint.sh to the scan project`);
+    ScanLogger.getInstance().addMessage(`Copying entrypoint.sh to the scan project`);
     const path = join(this.packagePath, "entrypoint.sh");
     writeFileSync(
       path,
       readFileSync(join(this.templatePath, "entrypoint.sh"), "utf8")
     );
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   /**
@@ -147,13 +147,13 @@ export class OrtScan {
    * the build are logged to the store.
    */
   private buildDockerImage(): void {
-    Store.getInstance().addMessage(`Building docker image`);
-    const buildImageCommand = `docker image build --no-cache --tag ${
+    ScanLogger.getInstance().addMessage(`Building docker image`);
+    const buildImageCommand = `docker image build --quiet --no-cache --tag ${
       this.containerName
     } ${resolve(this.packagePath)}`;
     const response = cmd(buildImageCommand);
-    checkCmdError(response, this.containerName);
-    Store.getInstance().addMessage(`done`);
+    checkCmdError(response);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   /**
@@ -165,13 +165,13 @@ export class OrtScan {
    * creation of the container are logged to the store.
    */
   private createDockerContainer(): void {
-    Store.getInstance().addMessage(`Creating docker container`);
+    ScanLogger.getInstance().addMessage(`Creating docker container`);
     const createContainerCommand = `docker container create --volume ${join(
       this.packagePath,
     )}:/home/ort/results:rw --name ${this.containerName} ${this.containerName}`;
     const response = cmd(createContainerCommand);
-    checkCmdError(response, "");
-    Store.getInstance().addMessage(`done`);
+    checkCmdError(response);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   /**
@@ -180,40 +180,40 @@ export class OrtScan {
    * during the start of the container are logged to the store.
    */
   private startDockerContainer(): void {
-    Store.getInstance().addMessage(`Running docker container`);
+    ScanLogger.getInstance().addMessage(`Running docker container`);
     const startContainerCommand = `docker container start --interactive ${this.containerName}`;
     const response = cmd(startContainerCommand);
-    checkCmdError(response, this.containerName);
-    Store.getInstance().addMessage(`done`);
+    checkCmdError(response);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   private stopDockerContainer(): void {
-    Store.getInstance().addMessage(`Stopping docker container`);
+    ScanLogger.getInstance().addMessage(`Stopping docker container`);
     const exists = this.existsDockerContainer();
     if (exists) {
-      Store.getInstance().addMessage(`Docker container exists`);
+      ScanLogger.getInstance().addMessage(`Docker container exists`);
       const stopContainerCommand = `docker container stop ${this.containerName}`;
       const response = cmd(stopContainerCommand);
-      checkCmdError(response, this.containerName);
+      checkCmdError(response);
     }
     else {
-      Store.getInstance().addMessage(`Docker container does not exist`);
+      ScanLogger.getInstance().addMessage(`Docker container does not exist`);
     }
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   private removeDockerContainer(): void {
-    Store.getInstance().addMessage(`Removing docker container`);
+    ScanLogger.getInstance().addMessage(`Removing docker container`);
     const exists = this.existsDockerContainer();
     if (exists) {
-      Store.getInstance().addMessage(`Docker container exists`);
+      ScanLogger.getInstance().addMessage(`Docker container exists`);
       const removeContainerCommand = `docker container rm --volumes ${this.containerName}`;
       const response = cmd(removeContainerCommand);
-      checkCmdError(response, this.containerName);
+      checkCmdError(response);
     } else {
-      Store.getInstance().addMessage(`Docker container does not exist`);
+      ScanLogger.getInstance().addMessage(`Docker container does not exist`);
     }
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 
   private existsDockerContainer(): boolean {
@@ -223,22 +223,22 @@ export class OrtScan {
   }
 
   private checkViolations(): void {
-    Store.getInstance().addMessage(`Checking for violations`);
+    ScanLogger.getInstance().addMessage(`Checking for violations`);
     const evaluationFilePath = join(this.packagePath, "evaluation-result.yml");
     const evaluationYaml = fileToYaml(evaluationFilePath);
     if(!evaluationYaml) {
-      Store.getInstance().addMessage(`No evaluation result found`);
+      ScanLogger.getInstance().addMessage(`No evaluation result found`);
       return;
     }
     const evaluationJson = yamlToJson(evaluationYaml);
     const violations = evaluationJson.evaluator.violations;
     if (violations.length > 0) {
-      Store.getInstance().addMessage(`Violations found`);
+      ScanLogger.getInstance().addMessage(`Violations found`);
       ViolationsStore.getInstance().addMessage(`Violations found`);
     } else {
-      Store.getInstance().addMessage(`No violations found`);
+      ScanLogger.getInstance().addMessage(`No violations found`);
       ViolationsStore.getInstance().addMessage(`No violations found`);
     }
-    Store.getInstance().addMessage(`done`);
+    ScanLogger.getInstance().addMessage(`done`);
   }
 }
