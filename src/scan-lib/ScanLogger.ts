@@ -31,11 +31,11 @@ export class ScanLogger {
     return this.scanLog.violations.map(m=>`(${m.severity})${m.rule}: ${m.message}`).join(separator);
   }
 
-  private isTaskLog<T extends object>(log: T): boolean {
+  public isTaskLog<T extends object>(log: T): boolean {
     return "id" in log;
   }
 
-  private isViolationLog<T extends object>(log: T): boolean {
+  public isViolationLog<T extends object>(log: T): boolean {
     return "rule" in log;
   }
 }

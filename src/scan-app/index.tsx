@@ -2,11 +2,11 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
-import { ScanLogger } from "../scan-lib/ScanLogger";
 import { OrtScan } from "../scan-lib/ort-scan";
+import { UILogger } from "../scan-lib/UILogger";
 
 const app = new Hono<{ Bindings: Bindings }>();
-const logger = new ScanLogger();
+const logger = new UILogger();
 const ortScan = new OrtScan(logger);
 
 app.use("/notify/*", async (c, next) => {
