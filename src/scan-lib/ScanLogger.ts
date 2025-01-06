@@ -1,4 +1,4 @@
-import { Task, ScanLog, Violation, TaskStatus } from './types';
+import { Task, ScanLog, Violation } from './types';
 import { updateTask } from './utils';
 
 export class ScanLogger {
@@ -8,9 +8,10 @@ export class ScanLogger {
     this.scanLog.messages = messages;
     this.scanLog.violations = violations;
   }
-  public addLog(id: number, name: string, status: TaskStatus = 'In Progress'): void {
-    const task = { id, name, status } as Task;
-    this.scanLog.messages = updateTask(this.scanLog.messages, task);
+  public addLog<T extends object>(log: T): void {
+    if ("id" in log) {
+      this.scanLog.messages = updateTask(this.scanLog.messages, log as unknown as Task);
+    }
   }
   public resetLog(): void {
     this.scanLog.messages = [];

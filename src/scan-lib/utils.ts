@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { CmdResponse, Task } from "./types";
+import { CmdResponse, Task, TaskStatus } from "./types";
 import { readFileSync } from "node:fs";
 import { parseDocument } from "yaml";
 
@@ -62,4 +62,8 @@ export function updateTask(tasks: Task[], task: Task): Task[] {
   }
   tasks.push(task);
   return tasks;
+}
+
+export function getTask(id: number, name: string, status: TaskStatus = 'In Progress'): Task {
+  return { id, name, status };
 }
