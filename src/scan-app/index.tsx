@@ -4,9 +4,10 @@ import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
 import { OrtScan } from "../scan-lib/ort-scan";
 import { UILogger } from "../scan-lib/UILogger";
+import { TerminalLogger } from "../scan-lib/TerminalLogger";
 
 const app = new Hono<{ Bindings: Bindings }>();
-const logger = new UILogger();
+const logger = new TerminalLogger();
 const ortScan = new OrtScan(logger);
 
 app.use("/notify/*", async (c, next) => {

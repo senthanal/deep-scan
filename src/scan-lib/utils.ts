@@ -52,7 +52,7 @@ export function updateTask(tasks: Task[], task: Task): Task[] {
       if (t.id === task.id) {
         const updatedTask: Task = {
           id: task.id,
-          name: `${t.name}...${task.name}`,
+          name: task.name,
           status: task.status,
         };
         return updatedTask;

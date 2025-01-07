@@ -5,10 +5,6 @@ import { resolve, join } from "node:path";
 const testDataPath = join(__dirname, "../", "test-data");
 const evaluationResultPath = resolve(testDataPath, "evaluation-result.yml");
 
-test("2 + 2", () => {
-  expect(2 + 2).toBe(4);
-});
-
 test("Should load the evaluator result yaml file", () => {
   const result = fileToYaml(evaluationResultPath);
   expect(result).not.toBeNull();

@@ -63,12 +63,12 @@ export class OrtScan {
     if (existsSync(this.packagePath)) {
       this.logger.addLog(getTask(taskId, `Cleaning scan project directory`));
       rmSync(this.packagePath, { recursive: true });
-      this.logger.addLog(getTask(taskId, `done`, "Completed"));
+      this.logger.addLog(getTask(taskId, `Scan project directory cleaned`, "Completed"));
     }
     const nextTaskId = this.getTaskId();
     this.logger.addLog(getTask(nextTaskId, `Creating scan project directory`));
     mkdirSync(this.packagePath);
-    this.logger.addLog(getTask(nextTaskId, `done`, "Completed"));
+    this.logger.addLog(getTask(nextTaskId, `Scan project directory created`, "Completed"));
   }
 
   /**
@@ -92,7 +92,7 @@ export class OrtScan {
       ...packageJson.dependencies,
       [packageName]: packageVersion,
     };
-    this.logger.addLog(getTask(taskId, `done`, "Completed"));
+    this.logger.addLog(getTask(taskId, `Added ${packageName}@${packageVersion} to the scan project dependencies`, "Completed"));
     return packageJson;
   }
 
@@ -110,7 +110,7 @@ export class OrtScan {
     const content = JSON.stringify(packageJson, null, 2);
     const path = join(this.packagePath, "package.json");
     writeFileSync(path, content);
-    this.logger.addLog(getTask(taskId, `done`, "Completed"));
+    this.logger.addLog(getTask(taskId, `Written package json to the scan project`, "Completed"));
   }
 
   /**
@@ -127,7 +127,7 @@ export class OrtScan {
       path,
       readFileSync(join(this.templatePath, "Dockerfile"), "utf8")
     );
-    this.logger.addLog(getTask(taskId, `done`, "Completed"));
+    this.logger.addLog(getTask(taskId, `Copied Dockerfile to the scan project`, "Completed"));
   }
 
   /**
@@ -144,7 +144,7 @@ export class OrtScan {
       "https://github.com/senthanal/ort-config.git"
     );
     writeFileSync(path, updatedDockerfile);
-    this.logger.addLog(getTask(taskId, `done`, "Completed"));
+    this.logger.addLog(getTask(taskId, `Updated ORT config repo to ${ortConfigRepo}`, "Completed"));
   }
 
   /**
@@ -160,7 +160,7 @@ export class OrtScan {
       path,
       readFileSync(join(this.templatePath, "entrypoint.sh"), "utf8")
     );
-    this.logger.addLog(getTask(taskId, `done`, "Completed"));
+    this.logger.addLog(getTask(taskId, `Copied entrypoint.sh to the scan project`, "Completed"));
   }
 
   /**
@@ -175,7 +175,7 @@ export class OrtScan {
     } ${resolve(this.packagePath)}`;
     const response = cmd(buildImageCommand);
     const error = checkCmdError(response);
-    this.logger.addLog(getTask(taskId, error ?? `done`, error ? "Failed" : "Completed"));
+    this.logger.addLog(getTask(taskId, error ?? `Docker image built`, error ? "Failed" : "Completed"));
   }
 
   /**
@@ -193,7 +193,7 @@ export class OrtScan {
     )}:/home/ort/results:rw --name ${this.containerName} ${this.containerName}`;
     const response = cmd(createContainerCommand);
     const error = checkCmdError(response);
-    this.logger.addLog(getTask(taskId, error ?? `done`, error ? "Failed" : "Completed"));
+    this.logger.addLog(getTask(taskId, error ?? `Docker container created`, error ? "Failed" : "Completed"));
   }
 
   /**
@@ -207,7 +207,7 @@ export class OrtScan {
     const startContainerCommand = `docker container start --interactive ${this.containerName}`;
     const response = cmd(startContainerCommand);
     const error = checkCmdError(response);
-    this.logger.addLog(getTask(taskId, error ?? `done`, error ? "Failed" : "Completed"));
+    this.logger.addLog(getTask(taskId, error ?? `Docker container started`, error ? "Failed" : "Completed"));
   }
 
   /**
@@ -224,7 +224,7 @@ export class OrtScan {
       const response = cmd(stopContainerCommand);
       error = checkCmdError(response);
     }
-    this.logger.addLog(getTask(taskId, error ?? `done`, error ? "Failed" : "Completed"));
+    this.logger.addLog(getTask(taskId, error ?? `Docker container stopped`, error ? "Failed" : "Completed"));
   }
 
   /**
@@ -241,7 +241,7 @@ export class OrtScan {
       const response = cmd(removeContainerCommand);
       error = checkCmdError(response);
     }
-    this.logger.addLog(getTask(taskId, error ?? `done`, error ? "Failed" : "Completed"));
+    this.logger.addLog(getTask(taskId, error ?? `Docker container removed`, error ? "Failed" : "Completed"));
   }
 
   private existsDockerContainer(): boolean {
@@ -264,11 +264,14 @@ export class OrtScan {
       this.logger.addLog(getTask(taskId, `No evaluation result found`, "Failed"));
       return;
     }
+    this.logger.addLog(getTask(taskId, `Violations checked`, "Completed"));
+    const nextTaskId = this.getTaskId();
+    this.logger.addLog(getTask(nextTaskId, `Logging violations`));
     const evaluationJson = yamlToJson(evaluationYaml);
     const violations = evaluationJson.evaluator.violations;
     violations.forEach((violation: any) => {
-      this.logger.addLog(getViolation(violation.rule, violation.packageName, violation.license, violation.licenseSource, violation.severity, violation.message));
+      this.logger.addLog(getViolation(violation.rule, violation.pkg, violation.license, violation.licenseSource, violation.severity, violation.message));
     });
-    this.logger.addLog(getTask(taskId, `done`, "Completed"));
+    this.logger.addLog(getTask(nextTaskId, `Violations logged`, "Completed"));
   }
 }
