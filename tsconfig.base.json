@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "paths": {
+      "@senthanal/deep-scan-app": ["./src/scan-app"],
+      "@senthanal/deep-scan-cli": ["./src/scan-cli"],
+      "@senthanal/deep-scan-lib": ["./src/scan-lib"],
+    }
+  }
+}
