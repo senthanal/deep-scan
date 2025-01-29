@@ -19,3 +19,27 @@ export type ContainerInfo = {
   State: string;
   Status: string;
 };
+
+export type Violation = {
+  rule: string;
+  packageName: string;
+  license: string;
+  licenseSource: string;
+  severity: string;
+  message: string;
+};
+
+export type TaskStatus = 'Not Started' | 'In Progress' | 'Completed' | 'Failed';
+
+export type Task = {
+  id: number;
+  name: string;
+  status: TaskStatus;
+};
+
+export type ScanLog = {
+  messages: Task[];
+  violations: Violation[];
+};
+
+

@@ -2,12 +2,13 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { PackageForm, renderer } from "./components";
 import { Bindings } from "hono/types";
-import { Store } from "../scan-lib/Store";
 import { OrtScan } from "../scan-lib/ort-scan";
-import { ViolationsStore } from "../scan-lib/ViolationsStore";
+import { UILogger } from "../scan-lib/UILogger";
+import { TerminalLogger } from "../scan-lib/TerminalLogger";
 
 const app = new Hono<{ Bindings: Bindings }>();
-const ortScan = new OrtScan();
+const logger = new TerminalLogger();
+const ortScan = new OrtScan(logger);
 
 app.use("/notify/*", async (c, next) => {
   c.header("Content-Type", "text/event-stream");
@@ -32,7 +33,7 @@ app.get("/", (c) => {
 app.get("/notifications", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: Store.getInstance().toString(),
+      data: logger.formatTaskLogAsString(),
       event: "process-update",
       id: String(new Date().getTime()),
     });
@@ -42,7 +43,7 @@ app.get("/notifications", async (c) => {
 app.get("/violations", async (c) => {
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      data: ViolationsStore.getInstance().toString(),
+      data: logger.formatViolationLogAsString(),
       event: "violations-update",
       id: String(new Date().getTime()),
     });
@@ -50,8 +51,7 @@ app.get("/violations", async (c) => {
 });
 
 app.get("/clear", async (c) => {
-  Store.getInstance().clearMessages();
-  ViolationsStore.getInstance().clearMessages();
+  logger.resetLog();
   return c.text("Messages cleared");
 });
 
