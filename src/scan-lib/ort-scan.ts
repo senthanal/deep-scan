@@ -9,7 +9,7 @@ export class OrtScan {
   private readonly packagePath = resolve(__dirname, "../../", "project-scan");
   private readonly templatePath = resolve(__dirname, "templates");
   private taskCounter = 0;
-  private logger: ScanLogger;
+  private readonly logger: ScanLogger;
 
   public constructor(logger: ScanLogger) {
     this.logger = logger;
