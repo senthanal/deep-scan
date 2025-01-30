@@ -2,7 +2,6 @@
   "name": "@senthanal/deep-scan-cli",
   "version": "1.0.0",
   "description": "Check a npm package FOSS compliance with a single command",
-  "main": "index.js",
   "bin": {
     "deep-scan": "./index.js"
   },
@@ -33,6 +32,16 @@
     "url": "https://github.com/senthanal/deep-scan"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "../../dist/@senthanal/scan-cli"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js"
+    }
   }
 }
