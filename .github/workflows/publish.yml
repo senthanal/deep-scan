@@ -1,20 +1,17 @@
 name: Publish Packages
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'packages/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/publish.yml'
 
 jobs:
   publish:
-    # Only run if PR is merged (not just closed)
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -45,7 +42,17 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Check if there are any changesets
+      # Check if this is a merge commit
+      - name: Check if merge commit
+        id: check_merge
+        run: |
+          if git log -1 --pretty=%B | grep -q "^Merge pull request"; then
+            echo "is_merge=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_merge=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Check for changesets
       - name: Check for changesets
         id: changesets
         run: |
@@ -55,9 +62,9 @@ jobs:
             echo "has_changesets=false" >> $GITHUB_OUTPUT
           fi
 
-      # Only run version and publish if there are changesets
+      # Only run version and publish if there are changesets and it's a merge commit
       - name: Version and Publish
-        if: steps.changesets.outputs.has_changesets == 'true'
+        if: steps.check_merge.outputs.is_merge == 'true' && steps.changesets.outputs.has_changesets == 'true'
         run: |
           # Configure git for commits
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -70,6 +77,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Notify on skip
+      - name: Notify on skip
+        if: steps.check_merge.outputs.is_merge == 'false' || steps.changesets.outputs.has_changesets == 'false'
+        run: |
+          if [ "${{ steps.check_merge.outputs.is_merge }}" = "false" ]; then
+            echo "Skipping publish: Not a merge commit"
+          fi
+          if [ "${{ steps.changesets.outputs.has_changesets }}" = "false" ]; then
+            echo "Skipping publish: No changesets found"
+          fi
 
       # Notify on failure
       - name: Notify on failure
