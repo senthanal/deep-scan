@@ -91,6 +91,7 @@ jobs:
     name: Build and Upload Artifacts
     runs-on: ubuntu-latest
     needs: [validate, lint, test]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -111,14 +112,40 @@ jobs:
       - name: Get changed packages
         id: changed-packages
         run: |
+          echo "Checking for changes in packages..."
+
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
           PACKAGES=""
           for pkg in src/*/; do
-            if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q "^${pkg}"; then
-              PKG_NAME=$(node -e "console.log(require('./${pkg}package.json').name.replace('@', '').replace('/', '-'))")
-              PACKAGES="$PACKAGES $PKG_NAME"
+            pkg=${pkg%/}  # Remove trailing slash
+            echo "Checking package: $pkg"
+
+            if echo "$CHANGED_FILES" | grep -q "^$pkg/"; then
+              echo "Found changes in $pkg"
+              if [ -f "$pkg/package.json" ]; then
+                PKG_NAME=$(node -e "console.log(require('./$pkg/package.json').name)")
+                echo "Package name: $PKG_NAME"
+                PACKAGES="$PACKAGES $PKG_NAME"
+              else
+                echo "Warning: package.json not found in $pkg"
+              fi
             fi
           done
-          echo "packages=${PACKAGES}" >> $GITHUB_OUTPUT
+
+          # Trim the string and ensure it's not empty
+          PACKAGES="$(echo -e "${PACKAGES}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+          if [ -n "$PACKAGES" ]; then
+            echo "Found changed packages: $PACKAGES"
+            echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+          else
+            echo "No package changes detected"
+            echo "packages=none" >> $GITHUB_OUTPUT
+          fi
 
       # Create package info file
       - name: Create package info
@@ -139,31 +166,67 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      # Add comment to PR with artifact info
-      - name: Comment on PR
+      # Update or create PR comment
+      - name: Update PR Comment
         if: success() && steps.changed-packages.outputs.packages != 'none'
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const packages = '${{ steps.changed-packages.outputs.packages }}'.trim();
-            const artifactName = 'dist-packages';
+            console.log('Changed packages:', packages);
 
-            const message = `### 📦 Build Artifacts Available
+            const packageList = packages
+              .split(' ')
+              .filter(Boolean)
+              .map(pkg => `- \`${pkg}\``)
+              .join('\n');
 
-            The following packages have been built and uploaded:
-            ${packages.split(' ').map(pkg => `- \`${pkg}\``).join('\n')}
+            console.log('Package list for comment:', packageList);
 
-            You can download the artifacts from the "Artifacts" section of this workflow run.
+            const message = `## 📦 Build Artifacts Ready for Review
 
-            > Note: Artifacts are retained for 7 days.`;
+            ### Changed Packages:
+              ${packageList}
 
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            });
+              ### Build Artifacts:
+              You can find the build artifacts in the "Artifacts" section of this workflow run.
 
+              > **Note:**
+              > - Artifacts are available for download for 7 days
+              > - Look for the \`dist-packages\` artifact
+              > - Each package's build output is in its respective directory under \`dist/\`
+              > - Last updated: ${new Date().toISOString()}`;
+
+              // Get existing comments
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              // Find our comment by looking for the header
+              const buildArtifactComment = comments.find(comment =>
+                comment.body.includes('## 📦 Build Artifacts Ready for Review')
+              );
+
+              if (buildArtifactComment) {
+                console.log('Updating existing comment');
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: buildArtifactComment.id,
+                  body: message
+                });
+              } else {
+                console.log('Creating new comment');
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: message
+                });
+              }
 
 permissions:
   contents: read
