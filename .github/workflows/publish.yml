@@ -63,3 +63,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           registry: "https://npm.pkg.github.com"
+          package: 'dist/@senthanal/deep-scan-cli'
