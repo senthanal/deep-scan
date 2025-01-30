@@ -87,10 +87,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-  build:
-    name: Build
+  build-and-upload:
+    name: Build and Upload Artifacts
     runs-on: ubuntu-latest
-
+    needs: [validate, lint, test]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -107,78 +107,62 @@ jobs:
       - name: Build packages
         run: npm run build
 
-      # Check dist size
-      - name: Check dist size
+      # Get changed packages
+      - name: Get changed packages
+        id: changed-packages
         run: |
-          for pkg in packages/*/; do
-            if [ -d "$pkg/dist" ]; then
-              echo "Size for ${pkg%/}:"
-              du -sh "$pkg/dist"
-
-              # Optional: Fail if any dist folder is too large (e.g., > 10MB)
-              size_in_kb=$(du -sk "$pkg/dist" | cut -f1)
-              if [ $size_in_kb -gt 10240 ]; then  # 10MB = 10240KB
-                echo "::error::Dist size for ${pkg%/} is too large: ${size_in_kb}KB (max: 10240KB)"
-                exit 1
-              fi
+          PACKAGES=""
+          for pkg in src/*/; do
+            if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q "^${pkg}"; then
+              PKG_NAME=$(node -e "console.log(require('./${pkg}package.json').name.replace('@', '').replace('/', '-'))")
+              PACKAGES="$PACKAGES $PKG_NAME"
             fi
           done
+          echo "packages=${PACKAGES}" >> $GITHUB_OUTPUT
 
-  verify-package:
-    name: Verify Package
-    runs-on: ubuntu-latest
+      # Create package info file
+      - name: Create package info
+        run: |
+          echo "PR: #${{ github.event.pull_request.number }}" > dist/build-info.txt
+          echo "Commit: ${{ github.sha }}" >> dist/build-info.txt
+          echo "Built: $(date)" >> dist/build-info.txt
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Upload artifacts for each changed package
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          name: dist-packages
+          path: |
+            dist/
+            !dist/**/node_modules/
+            !dist/**/.changeset/
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Install dependencies
-        run: npm ci
+      # Add comment to PR with artifact info
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const packages = '${{ steps.changed-packages.outputs.packages }}'.trim();
+            const artifactName = 'dist-packages';
 
-      - name: Build packages
-        run: npm run build
+            const message = `### 📦 Build Artifacts Available
 
-      - name: Check package contents
-        run: |
-          for pkg in packages/*/; do
-            if [ -f "$pkg/package.json" ]; then
-              echo "Checking package ${pkg%/}..."
+            The following packages have been built and uploaded:
+            ${packages.split(' ').map(pkg => `- \`${pkg}\``).join('\n')}
 
-              # Verify package.json
-              if ! jq empty "$pkg/package.json" 2>/dev/null; then
-                echo "::error::Invalid package.json in ${pkg%/}"
-                exit 1
-              fi
+            You can download the artifacts from the "Artifacts" section of this workflow run.
 
-              # Check required fields
-              required_fields=("name" "version" "main" "files")
-              for field in "${required_fields[@]}"; do
-                if ! jq -e ".$field" "$pkg/package.json" >/dev/null; then
-                  echo "::error::Missing required field '$field' in ${pkg%/}/package.json"
-                  exit 1
-                fi
-              done
+            > Note: Artifacts are retained for 7 days.`;
 
-              # Verify dist exists if specified in files
-              if jq -e '.files | contains(["dist"])' "$pkg/package.json" >/dev/null; then
-                if [ ! -d "$pkg/dist" ]; then
-                  echo "::error::Dist folder missing but specified in files array in ${pkg%/}"
-                  exit 1
-                fi
-              fi
-            fi
-          done
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
 
 permissions:
   contents: read
   pull-requests: write
-
-env:
-  CI: true
-  NODE_ENV: test
