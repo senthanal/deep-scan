@@ -5,10 +5,15 @@ on:
     branches:
       - main
     paths:
-      - 'packages/**'
+      - 'src/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/publish.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
 
 jobs:
   publish:
@@ -18,7 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Need full history for Changesets to work properly
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -27,6 +31,7 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
+          scope: '@senthanal'
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
@@ -42,60 +47,7 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Check if this is a merge commit
-      - name: Check if merge commit
-        id: check_merge
-        run: |
-          if git log -1 --pretty=%B | grep -q "^Merge pull request"; then
-            echo "is_merge=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_merge=false" >> $GITHUB_OUTPUT
-          fi
-
-      # Check for changesets
-      - name: Check for changesets
-        id: changesets
-        run: |
-          if [ -n "$(ls .changeset/*.md 2>/dev/null)" ]; then
-            echo "has_changesets=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changesets=false" >> $GITHUB_OUTPUT
-          fi
-
-      # Only run version and publish if there are changesets and it's a merge commit
-      - name: Version and Publish
-        if: steps.check_merge.outputs.is_merge == 'true' && steps.changesets.outputs.has_changesets == 'true'
-        run: |
-          # Configure git for commits
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-
-          # Run version and publish
-          npm run version
-          npm run publish-packages
+      - name: Publish scan cli package
+        run: npm run publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # Notify on skip
-      - name: Notify on skip
-        if: steps.check_merge.outputs.is_merge == 'false' || steps.changesets.outputs.has_changesets == 'false'
-        run: |
-          if [ "${{ steps.check_merge.outputs.is_merge }}" = "false" ]; then
-            echo "Skipping publish: Not a merge commit"
-          fi
-          if [ "${{ steps.changesets.outputs.has_changesets }}" = "false" ]; then
-            echo "Skipping publish: No changesets found"
-          fi
-
-      # Notify on failure
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "::error::Package publication failed. Please check the logs and retry if necessary."
-
-permissions:
-  contents: write
-  pull-requests: write
-  packages: write

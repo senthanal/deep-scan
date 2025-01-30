@@ -1,8 +1,7 @@
 {
   "name": "@senthanal/deep-scan-lib",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Deep scan library for the FOSS compliance of a npm package",
   "scripts": {
     "test": "bun test"
   },
@@ -17,6 +16,16 @@
     "url": "https://github.com/senthanal/deep-scan"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "../../dist/@senthanal/scan-lib"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js"
+    }
   }
 }

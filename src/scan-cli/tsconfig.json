@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/scan-cli",
+    "outDir": "../../dist/@senthanal/scan-cli",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "target": "es6",

@@ -1,8 +1,7 @@
 {
   "name": "@senthanal/deep-scan-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Deep scan web app for the FOSS compliance of a npm package",
   "scripts": {
   },
   "keywords": [],
@@ -16,6 +15,16 @@
     "url": "https://github.com/senthanal/deep-scan"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "../../dist/@senthanal/scan-app"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js"
+    }
   }
 }
