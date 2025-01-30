@@ -5,7 +5,7 @@ start();
 
 async function start() {
   try {
-    await buildCli();
+    await build();
     copyAssets();
   } catch (error) {
     console.error('Build failed:', error);
@@ -13,7 +13,7 @@ async function start() {
   }
 }
 
-async function buildCli() {
+async function build() {
   try {
     await esbuild.build({
       entryPoints: ['./src/scan-cli/index.ts'],

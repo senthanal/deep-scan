@@ -1,7 +1,7 @@
 {
   "name": "@senthanal/deep-scan-cli",
-  "version": "0.0.1",
-  "description": "Deep scan for the web",
+  "version": "1.0.0",
+  "description": "Check a npm package FOSS compliance with a single command",
   "main": "index.js",
   "bin": {
     "deep-scan": "./index.js"
@@ -22,5 +22,13 @@
     "bun": "^1.1.38",
     "type-fest": "^4.30.2",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/senthanal/deep-scan"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
