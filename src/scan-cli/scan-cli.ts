@@ -1,5 +1,5 @@
-import { OrtScan } from "../scan-lib/ort-scan";
-import { TerminalLogger } from "../scan-lib/TerminalLogger";
+import { OrtScan } from "@senthanal/deep-scan-lib";
+import { TerminalLogger } from "@senthanal/deep-scan-lib";
 import { ScanCliOptions } from "./types";
 
 export class ScanCli {

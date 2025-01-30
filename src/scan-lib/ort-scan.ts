@@ -29,6 +29,7 @@ export class OrtScan {
     packageVersion: string,
     ortConfigRepo = "https://github.com/senthanal/ort-config.git"
   ): Promise<void> {
+    this.checkDependencies();
     this.createPackagePath();
     const packageJson = this.getPackageJson(packageName, packageVersion);
     this.writePackageJson(packageJson);
@@ -51,6 +52,28 @@ export class OrtScan {
   private getTaskId(): number {
     this.taskCounter += 1;
     return this.taskCounter;
+  }
+
+  /**
+   * Checks if the dependencies required for the scan are installed. If they are
+   * not installed, logs an error message and exits the process.
+   */
+  checkDependencies() {
+    const taskId = this.getTaskId();
+    this.logger.addLog(getTask(taskId, `Checking dependencies needed for the scan`));
+    // Check if git is installed and available in the command line
+    const responseGit = cmd("git --version");
+    if(responseGit.stderr) {
+      console.error("Git is not installed or not available in the command line");
+      process.exit(1);
+    }
+    // Check if docker is installed and available in the command line
+    const responseDocker = cmd("docker --version");
+    if(responseDocker.stderr) {
+      console.error("Docker is not installed or not available in the command line");
+      process.exit(1);
+    }
+    this.logger.addLog(getTask(taskId, `Dependencies checked`, "Completed"));
   }
 
   /**
