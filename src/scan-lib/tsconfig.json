@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/scan-lib",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "target": "es6",
+    "module": "amd",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "moduleResolution": "node",
+    "types": ["node", "bun-types"]
+  },
+  "files": [],
+  "include": ["./**/*.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "node_modules"],
+}
