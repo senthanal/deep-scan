@@ -8,13 +8,19 @@
     "name": "Senthanal Sirpi Manohar",
     "email": "senthanal@gmail.com"
   },
+  "workspaces": [
+    "src/*"
+  ],
   "scripts": {
-    "build:cli": "node src/scan-cli/build.js",
-    "publish:cli": "node src/scan-cli/publish.js",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "version": "changeset version",
+    "publish-packages": "changeset publish",
     "start:cli": "bunx run --hot src/scan-cli/index.ts",
     "start": "bunx run --hot src/scan-app/index.tsx",
     "test:dev": "bunx test --watch",
-    "test": "bunx test"
+    "test:cli": "bunx test"
   },
   "dependencies": {
     "@types/bun": "^1.2.1",
@@ -26,12 +32,13 @@
     "yoctocolors": "^2.1.1"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.12",
+    "@types/bun": "latest",
     "@types/node": "^22.12.0",
     "esbuild": "^0.24.2",
     "esbuild-node-externals": "^1.16.0",
     "type-fest": "^4.30.2",
     "typed-htmx": "^0.3.1",
-    "typescript": "^5.7.2",
-    "@types/bun": "latest"
+    "typescript": "^5.7.2"
   }
 }

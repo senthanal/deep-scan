@@ -6,10 +6,16 @@
   "bin": {
     "deep-scan": "./index.js"
   },
+  "keywords": [],
   "license": "MIT",
   "author": {
     "name": "Senthanal Sirpi Manohar",
     "email": "senthanal@gmail.com"
+  },
+  "scripts": {
+    "build": "node ./build.js",
+    "start": "bunx run --hot ./index.ts",
+    "test": "bunx test --filter './src/scan-cli/**'"
   },
   "dependencies": {
     "commander": "^13.0.0",
@@ -28,7 +34,6 @@
     "url": "https://github.com/senthanal/deep-scan"
   },
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "access": "public"
   }
 }
