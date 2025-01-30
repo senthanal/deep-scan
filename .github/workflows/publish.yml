@@ -57,3 +57,9 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: 'dist/@senthanal/deep-scan-cli'
+
+      - uses: JS-DevTools/npm-publish@v3
+        if: contains(steps.changed-files.outputs.all_changed_files, 'src/scan-cli/') || contains(steps.changed-files.outputs.all_changed_files, 'src/scan-lib/')
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          registry: "https://npm.pkg.github.com"
