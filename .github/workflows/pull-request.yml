@@ -141,6 +141,7 @@ jobs:
 
       # Add comment to PR with artifact info
       - name: Comment on PR
+        if: success() && steps.changed-packages.outputs.packages != 'none'
         uses: actions/github-script@v7
         with:
           script: |
