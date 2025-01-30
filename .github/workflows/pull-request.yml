@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18.18.2'
           cache: 'npm'
 
       - name: Install dependencies
@@ -47,7 +47,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18.18.2'
           cache: 'npm'
 
       - name: Install Bun
@@ -73,7 +73,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18.18.2'
           cache: 'npm'
 
       - name: Install dependencies
@@ -88,6 +88,6 @@ jobs:
         with:
           name: dist-packages
           path: |
-            dist/@senthanal/scan-cli
+            dist/@senthanal/deep-scan-cli
           if-no-files-found: error
           retention-days: 7

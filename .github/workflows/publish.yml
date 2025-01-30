@@ -23,12 +23,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2  # Needed for changed-files action
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18.18.2'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           scope: '@senthanal'
@@ -47,7 +47,13 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Publish scan cli package
-        run: npm run publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Get changed files
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v43
+
+      - uses: JS-DevTools/npm-publish@v3
+        if: contains(steps.changed-files.outputs.all_changed_files, 'src/scan-cli/') || contains(steps.changed-files.outputs.all_changed_files, 'src/scan-lib/')
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: 'dist/@senthanal/deep-scan-cli'

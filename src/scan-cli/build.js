@@ -18,7 +18,7 @@ async function build() {
     await esbuild.build({
       entryPoints: ['./index.ts'],
       bundle: true,
-      outfile: './../../dist/@senthanal/scan-cli/index.js',
+      outfile: './../../dist/@senthanal/deep-scan-cli/index.js',
       platform: 'node',
       target: 'node18',
       format: 'cjs',
@@ -47,7 +47,7 @@ async function build() {
 
 function copyAssets(){
   // Copy templates to dist folder
-  fs.cpSync('./../scan-lib/templates', './../../dist/@senthanal/scan-cli/templates', { recursive: true });
-  fs.copyFileSync('./package.json', './../../dist/@senthanal/scan-cli/package.json');
+  fs.cpSync('./../scan-lib/templates', './../../dist/@senthanal/deep-scan-cli/templates', { recursive: true });
+  fs.copyFileSync('./package.json', './../../dist/@senthanal/deep-scan-cli/package.json');
   console.log('Assets copied to scan cli folder');
 }
