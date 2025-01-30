@@ -14,8 +14,7 @@
   },
   "scripts": {
     "build": "node ./build.js",
-    "start": "bunx run --hot ./index.ts",
-    "test": "bunx test --filter './src/scan-cli/**'"
+    "start": "bunx run --hot ./index.ts"
   },
   "dependencies": {
     "commander": "^13.0.0",
