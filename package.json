@@ -1,7 +1,7 @@
 {
   "name": "@senthanal/deep-scan",
   "version": "0.0.1",
-  "description": "Deep scan for the web",
+  "description": "Deep scan for the FOSS compliance of a npm package",
   "main": "index.js",
   "license": "MIT",
   "author": {
