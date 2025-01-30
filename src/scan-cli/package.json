@@ -24,6 +24,7 @@
     "typescript": "^5.7.2"
   },
   "repository": {
+    "type": "git",
     "url": "https://github.com/senthanal/deep-scan"
   },
   "publishConfig": {

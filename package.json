@@ -1,5 +1,5 @@
 {
-  "name": "deep-scan",
+  "name": "@senthanal/deep-scan",
   "version": "0.0.1",
   "description": "Deep scan for the web",
   "main": "index.js",
