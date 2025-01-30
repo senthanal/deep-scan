@@ -1,6 +1,6 @@
 {
   "name": "@senthanal/deep-scan-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Check a npm package FOSS compliance with a single command",
   "bin": {
     "deep-scan-cli": "./index.js"
