@@ -114,22 +114,39 @@ jobs:
         run: |
           echo "Checking for changes in packages..."
 
-          # Get list of changed files
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          # Fetch all history and refs
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-${{ github.event.pull_request.number }}
+          git fetch origin ${{ github.base_ref }}
+
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "PR ref: pr-${{ github.event.pull_request.number }}"
+
+          # Get changed files compared to base branch
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...pr-${{ github.event.pull_request.number }})
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
           PACKAGES=""
           for pkg in src/*/; do
+            if [ ! -d "$pkg" ]; then
+              echo "No src directories found"
+              continue
+            fi
+
             pkg=${pkg%/}  # Remove trailing slash
             echo "Checking package: $pkg"
 
             if echo "$CHANGED_FILES" | grep -q "^$pkg/"; then
               echo "Found changes in $pkg"
               if [ -f "$pkg/package.json" ]; then
-                PKG_NAME=$(node -e "console.log(require('./$pkg/package.json').name)")
-                echo "Package name: $PKG_NAME"
-                PACKAGES="$PACKAGES $PKG_NAME"
+                # Use a more robust way to read package.json
+                PKG_NAME=$(node -p "try { require('./$pkg/package.json').name } catch(e) { console.error(e); process.exit(1) }")
+                if [ $? -eq 0 ]; then
+                  echo "Package name: $PKG_NAME"
+                  PACKAGES="$PACKAGES $PKG_NAME"
+                else
+                  echo "Error reading package.json in $pkg"
+                fi
               else
                 echo "Warning: package.json not found in $pkg"
               fi
