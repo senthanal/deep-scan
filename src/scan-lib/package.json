@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "bunx test"
+    "test": "bun test"
   },
   "keywords": [],
   "license": "MIT",
