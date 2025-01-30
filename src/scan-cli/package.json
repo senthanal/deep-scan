@@ -1,9 +1,9 @@
 {
   "name": "@senthanal/deep-scan-cli",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Check a npm package FOSS compliance with a single command",
   "bin": {
-    "@senthanal/deep-scan-cli": "./index.js"
+    "deep-scan-cli": "./index.js"
   },
   "keywords": [],
   "license": "MIT",
