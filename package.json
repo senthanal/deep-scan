@@ -9,7 +9,8 @@
     "email": "senthanal@gmail.com"
   },
   "scripts": {
-    "build:cli": "node src/scan-cli/build-cli.js",
+    "build:cli": "node src/scan-cli/build.js",
+    "publish:cli": "node src/scan-cli/publish.js",
     "start:cli": "bunx run --hot src/scan-cli/index.ts",
     "start": "bunx run --hot src/scan-app/index.tsx",
     "test:dev": "bunx test --watch",

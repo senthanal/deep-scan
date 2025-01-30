@@ -1,6 +1,6 @@
 {
   "name": "@senthanal/deep-scan-cli",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Deep scan for the web",
   "main": "index.js",
   "bin": {
@@ -22,5 +22,12 @@
     "bun": "^1.1.38",
     "type-fest": "^4.30.2",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "url": "https://github.com/senthanal/deep-scan"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
