@@ -1,24 +1,27 @@
 name: Publish Packages
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
     paths:
-      - 'scan-lib/**'
-      - 'scan-cli/**'
+      - 'src/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/publish.yml'
 
 jobs:
-  build-and-publish:
+  publish:
+    # Only run if PR is merged (not just closed)
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          # Need full history for Changesets to work properly
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -40,17 +43,41 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: curl -fsSL https://bun.sh/install | bash && npm run test
+        run: npm test
 
-      - name: Create Release Pull Request or Publish
+      # Check if there are any changesets
+      - name: Check for changesets
         id: changesets
-        uses: changesets/action@v1
-        with:
-          version: npm run version
-          publish: npm run publish-packages
-          commit: "chore: version packages"
-          title: "chore: version packages"
+        run: |
+          if [ -n "$(ls .changeset/*.md 2>/dev/null)" ]; then
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Only run version and publish if there are changesets
+      - name: Version and Publish
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: |
+          # Configure git for commits
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Run version and publish
+          npm run version
+          npm run publish-packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Notify on failure
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Package publication failed. Please check the logs and retry if necessary."
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write

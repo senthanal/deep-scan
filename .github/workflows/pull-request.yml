@@ -1,0 +1,184 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/**'
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for changeset
+        id: changeset
+        run: |
+          if [ -z "$(ls .changeset/*.md 2>/dev/null)" ]; then
+            echo "::error::No changeset found. Please run 'npx changeset' to document your changes."
+            exit 1
+          fi
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint --if-present
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      # Check dist size
+      - name: Check dist size
+        run: |
+          for pkg in packages/*/; do
+            if [ -d "$pkg/dist" ]; then
+              echo "Size for ${pkg%/}:"
+              du -sh "$pkg/dist"
+
+              # Optional: Fail if any dist folder is too large (e.g., > 10MB)
+              size_in_kb=$(du -sk "$pkg/dist" | cut -f1)
+              if [ $size_in_kb -gt 10240 ]; then  # 10MB = 10240KB
+                echo "::error::Dist size for ${pkg%/} is too large: ${size_in_kb}KB (max: 10240KB)"
+                exit 1
+              fi
+            fi
+          done
+
+  verify-package:
+    name: Verify Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Check package contents
+        run: |
+          for pkg in packages/*/; do
+            if [ -f "$pkg/package.json" ]; then
+              echo "Checking package ${pkg%/}..."
+
+              # Verify package.json
+              if ! jq empty "$pkg/package.json" 2>/dev/null; then
+                echo "::error::Invalid package.json in ${pkg%/}"
+                exit 1
+              fi
+
+              # Check required fields
+              required_fields=("name" "version" "main" "files")
+              for field in "${required_fields[@]}"; do
+                if ! jq -e ".$field" "$pkg/package.json" >/dev/null; then
+                  echo "::error::Missing required field '$field' in ${pkg%/}/package.json"
+                  exit 1
+                fi
+              done
+
+              # Verify dist exists if specified in files
+              if jq -e '.files | contains(["dist"])' "$pkg/package.json" >/dev/null; then
+                if [ ! -d "$pkg/dist" ]; then
+                  echo "::error::Dist folder missing but specified in files array in ${pkg%/}"
+                  exit 1
+                fi
+              fi
+            fi
+          done
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  CI: true
+  NODE_ENV: test
