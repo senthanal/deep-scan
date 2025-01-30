@@ -35,7 +35,7 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm test
+        run: curl -fsSL https://bun.sh/install | bash && npm run test
 
       - name: Create Release Pull Request or Publish
         id: changesets
