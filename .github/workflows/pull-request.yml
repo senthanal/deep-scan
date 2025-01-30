@@ -11,37 +11,11 @@ on:
       - 'package-lock.json'
       - '.github/workflows/**'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
-  validate:
-    name: Validate PR
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check for changeset
-        id: changeset
-        run: |
-          if [ -z "$(ls .changeset/*.md 2>/dev/null)" ]; then
-            echo "::error::No changeset found. Please run 'npx changeset' to document your changes."
-            exit 1
-          fi
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -90,7 +64,7 @@ jobs:
   build-and-upload:
     name: Build and Upload Artifacts
     runs-on: ubuntu-latest
-    needs: [validate, lint, test]
+    needs: [lint, test]
 
     steps:
       - name: Checkout repository
@@ -108,143 +82,12 @@ jobs:
       - name: Build packages
         run: npm run build
 
-      # Get changed packages
-      - name: Get changed packages
-        id: changed-packages
-        run: |
-          echo "Checking for changes in packages..."
-
-          # Fetch all history and refs
-          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-${{ github.event.pull_request.number }}
-          git fetch origin ${{ github.base_ref }}
-
-          echo "Base ref: ${{ github.base_ref }}"
-          echo "PR ref: pr-${{ github.event.pull_request.number }}"
-
-          # Get changed files compared to base branch
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...pr-${{ github.event.pull_request.number }})
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-
-          PACKAGES=""
-          for pkg in src/*/; do
-            if [ ! -d "$pkg" ]; then
-              echo "No src directories found"
-              continue
-            fi
-
-            pkg=${pkg%/}  # Remove trailing slash
-            echo "Checking package: $pkg"
-
-            if echo "$CHANGED_FILES" | grep -q "^$pkg/"; then
-              echo "Found changes in $pkg"
-              if [ -f "$pkg/package.json" ]; then
-                # Use a more robust way to read package.json
-                PKG_NAME=$(node -p "try { require('./$pkg/package.json').name } catch(e) { console.error(e); process.exit(1) }")
-                if [ $? -eq 0 ]; then
-                  echo "Package name: $PKG_NAME"
-                  PACKAGES="$PACKAGES $PKG_NAME"
-                else
-                  echo "Error reading package.json in $pkg"
-                fi
-              else
-                echo "Warning: package.json not found in $pkg"
-              fi
-            fi
-          done
-
-          # Trim the string and ensure it's not empty
-          PACKAGES="$(echo -e "${PACKAGES}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-
-          if [ -n "$PACKAGES" ]; then
-            echo "Found changed packages: $PACKAGES"
-            echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
-          else
-            echo "No package changes detected"
-            echo "packages=none" >> $GITHUB_OUTPUT
-          fi
-
-      # Create package info file
-      - name: Create package info
-        run: |
-          echo "PR: #${{ github.event.pull_request.number }}" > dist/build-info.txt
-          echo "Commit: ${{ github.sha }}" >> dist/build-info.txt
-          echo "Built: $(date)" >> dist/build-info.txt
-
       # Upload artifacts for each changed package
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-packages
           path: |
-            dist/
-            !dist/**/node_modules/
-            !dist/**/.changeset/
+            dist/@senthanal/scan-cli
           if-no-files-found: error
           retention-days: 7
-
-      # Update or create PR comment
-      - name: Update PR Comment
-        if: success() && steps.changed-packages.outputs.packages != 'none'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const packages = '${{ steps.changed-packages.outputs.packages }}'.trim();
-            console.log('Changed packages:', packages);
-
-            const packageList = packages
-              .split(' ')
-              .filter(Boolean)
-              .map(pkg => `- \`${pkg}\``)
-              .join('\n');
-
-            console.log('Package list for comment:', packageList);
-
-            const message = `## 📦 Build Artifacts Ready for Review
-
-            ### Changed Packages:
-              ${packageList}
-
-              ### Build Artifacts:
-              You can find the build artifacts in the "Artifacts" section of this workflow run.
-
-              > **Note:**
-              > - Artifacts are available for download for 7 days
-              > - Look for the \`dist-packages\` artifact
-              > - Each package's build output is in its respective directory under \`dist/\`
-              > - Last updated: ${new Date().toISOString()}`;
-
-              // Get existing comments
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-              });
-
-              // Find our comment by looking for the header
-              const buildArtifactComment = comments.find(comment =>
-                comment.body.includes('## 📦 Build Artifacts Ready for Review')
-              );
-
-              if (buildArtifactComment) {
-                console.log('Updating existing comment');
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: buildArtifactComment.id,
-                  body: message
-                });
-              } else {
-                console.log('Creating new comment');
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  body: message
-                });
-              }
-
-permissions:
-  contents: read
-  pull-requests: write

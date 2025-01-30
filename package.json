@@ -15,8 +15,7 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
-    "version": "changeset version",
-    "publish-packages": "changeset publish",
+    "publish": "npm run publish --workspaces --if-present",
     "start:cli": "bunx run --hot src/scan-cli/index.ts",
     "start": "bunx run --hot src/scan-app/index.tsx",
     "test:dev": "bunx test --watch",
@@ -30,7 +29,6 @@
     "yoctocolors": "^2.1.1"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.12",
     "@types/bun": "^1.2.1",
     "@types/node": "^22.12.0",
     "bun": "^1.2.1",
