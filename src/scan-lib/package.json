@@ -1,0 +1,22 @@
+{
+  "name": "@senthanal/deep-scan-lib",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "bunx test"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "author": {
+    "name": "Senthanal Sirpi Manohar",
+    "email": "senthanal@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/senthanal/deep-scan"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

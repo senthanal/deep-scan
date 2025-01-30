@@ -16,9 +16,9 @@ async function start() {
 async function build() {
   try {
     await esbuild.build({
-      entryPoints: ['./src/scan-cli/index.ts'],
+      entryPoints: ['./index.ts'],
       bundle: true,
-      outfile: './dist/scan-cli/index.js',
+      outfile: './../../dist/scan-cli/index.js',
       platform: 'node',
       target: 'node18',
       format: 'cjs',
@@ -47,7 +47,7 @@ async function build() {
 
 function copyAssets(){
   // Copy templates to dist folder
-  fs.cpSync('./src/scan-lib/templates', './dist/scan-cli/templates', { recursive: true });
-  fs.copyFileSync('./src/scan-cli/package.json', './dist/scan-cli/package.json');
+  fs.cpSync('./../scan-lib/templates', './../../dist/scan-cli/templates', { recursive: true });
+  //fs.copyFileSync('./package.json', './../../dist/scan-cli/package.json');
   console.log('Assets copied to scan cli folder');
 }
