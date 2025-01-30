@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Check a npm package FOSS compliance with a single command",
   "bin": {
-    "@senthanal/deep-scan-cli": "./index.js"
+    "deep-scan": "./index.js"
   },
   "keywords": [],
   "license": "MIT",
@@ -13,7 +13,6 @@
   },
   "scripts": {
     "build": "node ./build.js",
-    "publish": "node ./publish.js",
     "start": "bunx run --hot ./index.ts"
   },
   "dependencies": {
@@ -34,8 +33,6 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org",
-    "scope": "@senthanal",
     "directory": "../../dist/@senthanal/scan-cli"
   },
   "main": "./index.js",
