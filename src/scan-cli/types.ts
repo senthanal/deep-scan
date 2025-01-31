@@ -1,6 +1,4 @@
-export type ScanCliOptions = {
-  packageName: string;
-  packageVersion: string;
-  ortConfigRepoUrl: string;
-};
+import {ScanPackageOptions, ScanProjectOptions} from "@senthanal/deep-scan-lib";
+
+export type ScanCliOptions = ScanProjectOptions | ScanPackageOptions;
 

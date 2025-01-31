@@ -1,13 +1,12 @@
-import { Hono } from "hono";
-import { streamSSE } from "hono/streaming";
-import { PackageForm, renderer } from "./components";
-import { Bindings } from "hono/types";
-import { OrtScan } from "../scan-lib/ort-scan";
-import { UILogger } from "../scan-lib/UILogger";
+import {Hono} from "hono";
+import {streamSSE} from "hono/streaming";
+import {PackageForm, renderer} from "./components";
+import {Bindings} from "hono/types";
+import {ScanPackageOptions, UILogger} from "@senthanal/deep-scan-lib";
+import {OrtScan} from "@senthanal/deep-scan-lib";
 
 const app = new Hono<{ Bindings: Bindings }>();
 const logger = new UILogger();
-const ortScan = new OrtScan(logger);
 
 app.use("/notify/*", async (c, next) => {
   c.header("Content-Type", "text/event-stream");
@@ -23,7 +22,7 @@ app.get("/", (c) => {
     <main class="container">
       <h1>Home</h1>
       <div>
-        <PackageForm />
+        <PackageForm/>
       </div>
     </main>
   );
@@ -55,9 +54,15 @@ app.get("/clear", async (c) => {
 });
 
 app.post("/package", async (c) => {
-  const { name, version, ortConfigRepo } = await c.req.parseBody();
-  await ortScan.scan(name as string, version as string, ortConfigRepo as string);
-  return c.json({ name, version, ortConfigRepo });
+  const {name, version, ortConfigRepo} = await c.req.parseBody();
+  const options: ScanPackageOptions = {
+    packageName: name as string,
+    packageVersion: version as string,
+    ortConfigRepoUrl: ortConfigRepo as string
+  };
+  const ortScan = new OrtScan<ScanPackageOptions>(logger, options);
+  ortScan.scan();
+  return c.json({name, version, ortConfigRepo});
 });
 
 export default app;

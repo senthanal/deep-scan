@@ -1,18 +1,22 @@
-import { ScanLogger } from "./ScanLogger";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
-import { PackageJson } from "type-fest";
-import { checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson } from "./utils";
+import {ScanLogger} from "./ScanLogger";
+import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "fs";
+import {join, resolve} from "path";
+import {PackageJson} from "type-fest";
+import {checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson} from "./utils";
+import {isScanPackageOptions, isScanProjectOptions} from "./types";
+import {cpSync} from "node:fs";
 
-export class OrtScan {
+export class OrtScan<T> {
   private readonly containerName = "deep-scan";
   private readonly packagePath = resolve(__dirname, "../../", "project-scan");
   private readonly templatePath = resolve(__dirname, "templates");
   private taskCounter = 0;
   private readonly logger: ScanLogger;
+  private readonly scanOptions: T;
 
-  public constructor(logger: ScanLogger) {
+  public constructor(logger: ScanLogger, scanOptions: T) {
     this.logger = logger;
+    this.scanOptions = scanOptions;
   }
 
   /**
@@ -20,21 +24,21 @@ export class OrtScan {
    * temporary directory with the given package and version as a dependency, and
    * then build a Docker image from it. The Docker image will then be run in a
    * container which will be stopped and removed after it has finished running.
-   *
-   * @param packageName - The name of the package to scan.
-   * @param packageVersion - The version of the package to scan.
    */
-  public async scan(
-    packageName: string,
-    packageVersion: string,
-    ortConfigRepo = "https://github.com/senthanal/ort-config.git"
-  ): Promise<void> {
+  public scan(): void {
     this.checkDependencies();
     this.createPackagePath();
-    const packageJson = this.getPackageJson(packageName, packageVersion);
-    this.writePackageJson(packageJson);
-    this.copyDockerfile();
-    this.updateOrtConfigRepo(ortConfigRepo);
+    if (isScanPackageOptions(this.scanOptions)) {
+      const packageJson = this.getPackageJson(this.scanOptions.packageName, this.scanOptions.packageVersion);
+      this.writePackageJson(packageJson);
+      this.copyDockerfile("scan-package");
+      this.updateDockerfile(this.scanOptions.ortConfigRepoUrl);
+    }
+    if (isScanProjectOptions(this.scanOptions)) {
+      this.copyDockerfile("scan-project");
+      this.copyProjectFiles(this.scanOptions.projectPath);
+      this.copyOrtConfigFiles(this.scanOptions.projectConfigPath);
+    }
     this.copyDockerEntry();
     this.buildDockerImage();
     const exists = this.existsDockerContainer();
@@ -63,13 +67,13 @@ export class OrtScan {
     this.logger.addLog(getTask(taskId, `Checking dependencies needed for the scan`));
     // Check if git is installed and available in the command line
     const responseGit = cmd("git --version");
-    if(responseGit.stderr) {
+    if (responseGit.stderr) {
       console.error("Git is not installed or not available in the command line");
       process.exit(1);
     }
     // Check if docker is installed and available in the command line
     const responseDocker = cmd("docker --version");
-    if(responseDocker.stderr) {
+    if (responseDocker.stderr) {
       console.error("Docker is not installed or not available in the command line");
       process.exit(1);
     }
@@ -85,7 +89,7 @@ export class OrtScan {
     const taskId = this.getTaskId();
     if (existsSync(this.packagePath)) {
       this.logger.addLog(getTask(taskId, `Cleaning scan project directory`));
-      rmSync(this.packagePath, { recursive: true });
+      rmSync(this.packagePath, {recursive: true});
       this.logger.addLog(getTask(taskId, `Scan project directory cleaned`, "Completed"));
     }
     const nextTaskId = this.getTaskId();
@@ -109,7 +113,7 @@ export class OrtScan {
     const msg = `Adding ${packageName}@${packageVersion} to the scan project dependencies`;
     this.logger.addLog(getTask(taskId, msg));
     const packageJson = JSON.parse(
-      readFileSync(join(this.templatePath, "package.json"), "utf8")
+      readFileSync(join(this.templatePath, "scan-package", "package.json"), "utf8")
     ) as PackageJson;
     packageJson.dependencies = {
       ...packageJson.dependencies,
@@ -142,13 +146,13 @@ export class OrtScan {
    * Docker image, and the Dockerfile must be in the same directory as the
    * package source code.
    */
-  private copyDockerfile(): void {
+  private copyDockerfile(dockerFilePath: string): void {
     const taskId = this.getTaskId();
     this.logger.addLog(getTask(taskId, `Copying Dockerfile to the scan project`));
     const path = join(this.packagePath, "Dockerfile");
     writeFileSync(
       path,
-      readFileSync(join(this.templatePath, "Dockerfile"), "utf8")
+      readFileSync(join(this.templatePath, dockerFilePath, "Dockerfile"), "utf8")
     );
     this.logger.addLog(getTask(taskId, `Copied Dockerfile to the scan project`, "Completed"));
   }
@@ -157,17 +161,42 @@ export class OrtScan {
    * Updates the ORT config repo in the Dockerfile to the given url.
    * @param ortConfigRepo - The url of the ORT config repo to use.
    */
-  private updateOrtConfigRepo(ortConfigRepo: string): void {
+  private updateDockerfile(ortConfigRepo: string): void {
     const taskId = this.getTaskId();
     this.logger.addLog(getTask(taskId, `Updating ORT config repo to ${ortConfigRepo}`));
     const path = join(this.packagePath, "Dockerfile");
     const dockerfile = readFileSync(path, "utf8");
     const updatedDockerfile = dockerfile.replace(
       "${ort-config-repo}",
-      "https://github.com/senthanal/ort-config.git"
+      ortConfigRepo
     );
     writeFileSync(path, updatedDockerfile);
     this.logger.addLog(getTask(taskId, `Updated ORT config repo to ${ortConfigRepo}`, "Completed"));
+  }
+
+  /**
+   * Copies the project files from the given project folder to the scan project.
+   * @param projectFolder
+   * @private
+   */
+  private copyProjectFiles(projectFolder: string): void {
+    const taskId = this.getTaskId();
+    this.logger.addLog(getTask(taskId, `Copying project files to the scan project`));
+    cpSync(projectFolder, this.packagePath, {recursive: true});
+    this.logger.addLog(getTask(taskId, `Copied project files to the scan project`, "Completed"));
+  }
+
+  /**
+   * Copies the ORT config files from the given folder to the scan project.
+   * @param ortConfigFolder
+   * @private
+   */
+  private copyOrtConfigFiles(ortConfigFolder: string): void {
+    const taskId = this.getTaskId();
+    this.logger.addLog(getTask(taskId, `Copying ORT config files to the scan project`));
+    const path = join(this.packagePath, ".ort/config");
+    cpSync(ortConfigFolder, path, {recursive: true});
+    this.logger.addLog(getTask(taskId, `Copied ORT config files to the scan project`, "Completed"));
   }
 
   /**

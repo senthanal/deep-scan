@@ -16,8 +16,6 @@
     "test": "npm run test --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
     "publish": "npm run publish --workspaces --if-present",
-    "start:cli": "bunx run --hot src/scan-cli/index.ts",
-    "start": "bunx run --hot src/scan-app/index.tsx",
     "test:dev": "bunx test --watch",
     "test:cli": "bunx test"
   },

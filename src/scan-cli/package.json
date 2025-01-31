@@ -1,6 +1,6 @@
 {
   "name": "@senthanal/deep-scan-cli",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "description": "Check a npm package FOSS compliance with a single command",
   "bin": {
     "deep-scan-cli": "./index.js"
@@ -13,7 +13,6 @@
   },
   "scripts": {
     "build": "node ./build.js",
-    "publish": "node ./publish.js",
     "start": "bunx run --hot ./index.ts"
   },
   "dependencies": {
