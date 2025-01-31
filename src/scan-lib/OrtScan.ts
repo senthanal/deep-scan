@@ -1,18 +1,21 @@
-import { ScanLogger } from "./ScanLogger";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
-import { PackageJson } from "type-fest";
-import { checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson } from "./utils";
+import {ScanLogger} from "./ScanLogger";
+import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "fs";
+import {join, resolve} from "path";
+import {PackageJson} from "type-fest";
+import {checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson} from "./utils";
+import {isScanPackageOptions, isScanProjectOptions} from "./types";
 
-export class OrtScan {
+export class OrtScan<T> {
   private readonly containerName = "deep-scan";
   private readonly packagePath = resolve(__dirname, "../../", "project-scan");
   private readonly templatePath = resolve(__dirname, "templates");
   private taskCounter = 0;
   private readonly logger: ScanLogger;
+  private readonly scanOptions: T;
 
-  public constructor(logger: ScanLogger) {
+  public constructor(logger: ScanLogger, scanOptions: T) {
     this.logger = logger;
+    this.scanOptions = scanOptions;
   }
 
   /**
@@ -20,21 +23,19 @@ export class OrtScan {
    * temporary directory with the given package and version as a dependency, and
    * then build a Docker image from it. The Docker image will then be run in a
    * container which will be stopped and removed after it has finished running.
-   *
-   * @param packageName - The name of the package to scan.
-   * @param packageVersion - The version of the package to scan.
    */
-  public async scan(
-    packageName: string,
-    packageVersion: string,
-    ortConfigRepo = "https://github.com/senthanal/ort-config.git"
-  ): Promise<void> {
+  public scan(): void {
     this.checkDependencies();
-    this.createPackagePath();
-    const packageJson = this.getPackageJson(packageName, packageVersion);
-    this.writePackageJson(packageJson);
-    this.copyDockerfile();
-    this.updateOrtConfigRepo(ortConfigRepo);
+    if (isScanPackageOptions(this.scanOptions)) {
+      this.createPackagePath();
+      const packageJson = this.getPackageJson(this.scanOptions.packageName, this.scanOptions.packageVersion);
+      this.writePackageJson(packageJson);
+      this.copyDockerfile();
+      this.updateOrtConfigRepo(this.scanOptions.ortConfigRepoUrl);
+    }
+    if (isScanProjectOptions(this.scanOptions)) {
+      process.exit(1);
+    }
     this.copyDockerEntry();
     this.buildDockerImage();
     const exists = this.existsDockerContainer();
@@ -63,13 +64,13 @@ export class OrtScan {
     this.logger.addLog(getTask(taskId, `Checking dependencies needed for the scan`));
     // Check if git is installed and available in the command line
     const responseGit = cmd("git --version");
-    if(responseGit.stderr) {
+    if (responseGit.stderr) {
       console.error("Git is not installed or not available in the command line");
       process.exit(1);
     }
     // Check if docker is installed and available in the command line
     const responseDocker = cmd("docker --version");
-    if(responseDocker.stderr) {
+    if (responseDocker.stderr) {
       console.error("Docker is not installed or not available in the command line");
       process.exit(1);
     }
@@ -85,7 +86,7 @@ export class OrtScan {
     const taskId = this.getTaskId();
     if (existsSync(this.packagePath)) {
       this.logger.addLog(getTask(taskId, `Cleaning scan project directory`));
-      rmSync(this.packagePath, { recursive: true });
+      rmSync(this.packagePath, {recursive: true});
       this.logger.addLog(getTask(taskId, `Scan project directory cleaned`, "Completed"));
     }
     const nextTaskId = this.getTaskId();

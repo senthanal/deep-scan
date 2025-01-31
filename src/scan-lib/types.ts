@@ -2,24 +2,6 @@ export type CmdResponse = {
   stdout: string;
   stderr: string;
 };
-
-export type ContainerInfo = {
-  Command: string;
-  CreatedAt: string;
-  ID: string;
-  Image: string;
-  Labels: string;
-  LocalVolumes: string;
-  Mounts: string;
-  Names: string;
-  Networks: string;
-  Ports: string;
-  RunningFor: string;
-  Size: string;
-  State: string;
-  Status: string;
-};
-
 export type Violation = {
   rule: string;
   packageName: string;
@@ -42,4 +24,21 @@ export type ScanLog = {
   violations: Violation[];
 };
 
+export type ScanProjectOptions = {
+  projectPath: string;
+  projectConfigPath: string;
+};
 
+export type ScanPackageOptions = {
+  packageName: string;
+  packageVersion: string;
+  ortConfigRepoUrl: string;
+};
+
+export const isScanPackageOptions = (options: any): options is ScanPackageOptions => {
+  return options.packageName && options.packageVersion && options.ortConfigRepoUrl;
+};
+
+export const isScanProjectOptions = (options: any): options is ScanProjectOptions => {
+  return options.projectPath && options.projectConfigPath;
+};
