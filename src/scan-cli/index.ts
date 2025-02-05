@@ -24,6 +24,7 @@ program
   .description("Deep scan an npm project")
   .requiredOption("-p, --projectPath <project path>", "Path to the root of the project directory to be scanned")
   .requiredOption("-c, --projectConfigPath <project ort config path>", "Path to the ort config directory for the project to be scanned")
+  .requiredOption("-r, --projectResultsPath <project ort results path>", "Path to the ort results directory for the project to be scanned")
   .action((options) => {
     const logger = new TerminalLogger();
     const ortScan = new OrtScan<ScanProjectOptions>(logger, options as ScanProjectOptions);
