@@ -50,9 +50,15 @@ export class OrtScan<T> {
     this.startDockerContainer();
     this.stopDockerContainer();
     this.removeDockerContainer();
-    this.checkViolations();
+    if (!this.noEvaluationInScanResult()) {
+      this.checkViolations();
+    }
   }
 
+  /**
+   * Returns a unique task id for the scan process.
+   * @private
+   */
   private getTaskId(): number {
     this.taskCounter += 1;
     return this.taskCounter;
@@ -296,10 +302,43 @@ export class OrtScan<T> {
     this.logger.addLog(getTask(taskId, error ?? `Docker container removed`, error ? "Failed" : "Completed"));
   }
 
+  /**
+   * Checks if a Docker container with the given name exists. Returns true if
+   * the container exists, and false otherwise.
+   * @private
+   */
   private existsDockerContainer(): boolean {
     const listContainerCommand = ` docker container ls --all --quiet --filter "name=${this.containerName}"`;
     const response = cmd(listContainerCommand);
     return response.stdout.trim() !== "";
+  }
+
+  /**
+   * Checks if the scan result YAML file contains an evaluation. If it does not,
+   * logs a message to the ScanLogger and returns true. Otherwise, logs a message
+   * to the ScanLogger and returns false.
+   * @private
+   */
+  private noEvaluationInScanResult(): boolean {
+    const taskId = this.getTaskId();
+    this.logger.addLog(getTask(taskId, `Checking for evaluation in scan result`));
+    const scanFilePath = join(this.packagePath, "scan-result.yml");
+    if (!existsSync(scanFilePath)) {
+      this.logger.addLog(getTask(taskId, `No scan result found`, "Failed"));
+      return false;
+    }
+    const scanYaml = fileToYaml(scanFilePath);
+    if (!scanYaml) {
+      this.logger.addLog(getTask(taskId, `No scan result found`, "Failed"));
+      return false;
+    }
+    const scanJson = yamlToJson(scanYaml);
+    if (!scanJson.evaluator) {
+      this.logger.addLog(getTask(taskId, `No evaluation found in scan result`, "Completed"));
+      return true;
+    }
+    this.logger.addLog(getTask(taskId, `Evaluation found in scan result`, "Completed"));
+    return false;
   }
 
   /**
