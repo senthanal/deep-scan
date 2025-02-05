@@ -27,6 +27,7 @@ export type ScanLog = {
 export type ScanProjectOptions = {
   projectPath: string;
   projectConfigPath: string;
+  projectResultsPath?: string;
 };
 
 export type ScanPackageOptions = {

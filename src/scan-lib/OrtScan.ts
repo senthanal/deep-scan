@@ -4,7 +4,7 @@ import {join, resolve} from "path";
 import {PackageJson} from "type-fest";
 import {checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson} from "./utils";
 import {isScanPackageOptions, isScanProjectOptions} from "./types";
-import {cpSync} from "node:fs";
+import {cpSync, copyFileSync} from "node:fs";
 
 export class OrtScan<T> {
   private readonly containerName = "deep-scan";
@@ -52,6 +52,9 @@ export class OrtScan<T> {
     this.removeDockerContainer();
     if (!this.noEvaluationInScanResult()) {
       this.checkViolations();
+    }
+    if(isScanProjectOptions(this.scanOptions) && this.scanOptions.projectResultsPath) {
+      this.copyResultsToOutputDir(this.scanOptions.projectResultsPath);
     }
   }
 
@@ -364,5 +367,28 @@ export class OrtScan<T> {
       this.logger.addLog(getViolation(violation.rule, violation.pkg, violation.license, violation.licenseSource, violation.severity, violation.message));
     });
     this.logger.addLog(getTask(nextTaskId, `Violations logged`, "Completed"));
+  }
+
+  /**
+   * Copies the scan results to the output directory.
+   * @param outputDir
+   * @private
+   */
+  private copyResultsToOutputDir(outputDir: string): void {
+    const taskId = this.getTaskId();
+    this.logger.addLog(getTask(taskId, `Copying scan results to output directory`));
+    const outputPath = resolve(outputDir);
+    if (!existsSync(outputPath)) {
+      mkdirSync(outputPath);
+    }
+    rmSync(outputPath, {recursive: true});
+    mkdirSync(outputPath);
+    const filesToCopy = ["analyzer-result.yml", "scan-result.yml", "evaluation-result.yml", "bom.cyclonedx.json", "scan-report-web-app.html"];
+    filesToCopy.forEach((file) => {
+      const source = join(this.packagePath, file);
+      const destination = join(outputPath, file);
+      copyFileSync(source, destination);
+    });
+    this.logger.addLog(getTask(taskId, `Copied scan results to output directory`, "Completed"));
   }
 }
