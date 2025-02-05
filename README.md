@@ -1,10 +1,10 @@
 # Deep Scan
 
-A node app to scan and report license violations for the given npm package using OpenSource Review Toolkit(ORT)
+Primarily a node cli to scan project dependencies for license violations using OpenSource Review Toolkit(ORT).
 
 ## Motivation
 
-Typical scenario, ORT provides possibility of setting up the company software auditing policies. Running such a ORT scan in every PR commit increases build pipeline runtime drastically. Ideally, we would like to evaluate desired npm package against those company policies before using them.
+Typical scenario, ORT provides possibility of setting up the company software auditing policies. Running such a ORT scan in every PR commit increases build pipeline runtime drastically. This project aims to provide a solution to run ORT scan on the project dependencies and provide the results in a timely manner.
 
 ## Architecture
 
@@ -37,10 +37,16 @@ npm install
 
 ### Usage
 
-Serving the app
+Scan ORT for the project dependencies in compliance with the company policies
 
 ```sh
-npm start
+npx @senthanal/deep-scan-cli@latest project -p <project-path> -c <ort-config-path> -r <ort-result-path>
+```
+
+Scan ORT for validating a npm package in compliance with the company policies
+
+```sh
+npx @senthanal/deep-scan-cli@latest package -p <package-name> -v <package-version> -c <ort-config-repo-url>
 ```
 
 ### Testing the app
@@ -61,11 +67,15 @@ npm test
 ````
 
 ## Built With
-
-* Hono
-* HTMX
+* Commander
 * Docker
 * ORT
+* ora
+* yoctocolors
+### Web Application to Scan a npm package
+* Hono
+* HTMX
+
 
 ## Author
 
