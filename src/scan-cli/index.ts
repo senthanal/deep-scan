@@ -1,5 +1,11 @@
 import {program} from "commander";
-import {OrtScan, ScanPackageOptions, ScanProjectOptions, TerminalLogger} from "@senthanal/deep-scan-lib";
+import {
+  ScanPackage,
+  ScanPackageOptions,
+  ScanProject,
+  ScanProjectOptions,
+  TerminalLogger
+} from "@senthanal/deep-scan-lib";
 
 program
   .command("package")
@@ -15,7 +21,7 @@ program
   )
   .action((options) => {
     const logger = new TerminalLogger();
-    const ortScan = new OrtScan<ScanPackageOptions>(logger, options as ScanPackageOptions);
+    const ortScan = new ScanPackage(logger, options as ScanPackageOptions);
     ortScan.scan();
   });
 
@@ -27,7 +33,7 @@ program
   .requiredOption("-r, --projectResultsPath <project ort results path>", "Path to the ort results directory for the project to be scanned")
   .action((options) => {
     const logger = new TerminalLogger();
-    const ortScan = new OrtScan<ScanProjectOptions>(logger, options as ScanProjectOptions);
+    const ortScan = new ScanProject(logger, options as ScanProjectOptions);
     ortScan.scan();
   });
 

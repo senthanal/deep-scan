@@ -2,8 +2,7 @@ import {Hono} from "hono";
 import {streamSSE} from "hono/streaming";
 import {PackageForm, renderer} from "./components";
 import {Bindings} from "hono/types";
-import {ScanPackageOptions, UILogger} from "@senthanal/deep-scan-lib";
-import {OrtScan} from "@senthanal/deep-scan-lib";
+import {ScanPackage, ScanPackageOptions, UILogger} from "@senthanal/deep-scan-lib";
 
 const app = new Hono<{ Bindings: Bindings }>();
 const logger = new UILogger();
@@ -60,7 +59,7 @@ app.post("/package", async (c) => {
     packageVersion: version as string,
     ortConfigRepoUrl: ortConfigRepo as string
   };
-  const ortScan = new OrtScan<ScanPackageOptions>(logger, options);
+  const ortScan = new ScanPackage(logger, options);
   ortScan.scan();
   return c.json({name, version, ortConfigRepo});
 });
