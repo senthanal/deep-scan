@@ -1,6 +1,6 @@
 import {ScanLogger} from "./ScanLogger";
 import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "fs";
-import {join, resolve} from "path";
+import {join, resolve, normalize} from "path";
 import {PackageJson} from "type-fest";
 import {checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson} from "./utils";
 import {isScanPackageOptions, isScanProjectOptions} from "./types";
@@ -191,7 +191,14 @@ export class OrtScan<T> {
   private copyProjectFiles(projectFolder: string): void {
     const taskId = this.getTaskId();
     this.logger.addLog(getTask(taskId, `Copying project files to the scan project`));
-    cpSync(projectFolder, this.packagePath, {recursive: true});
+    const sourcePath = normalize(resolve(projectFolder));
+    const destPath = normalize(resolve(this.packagePath));
+
+    // Add Windows long path prefix if needed
+    const sourceWithPrefix = process.platform === 'win32' ? `\\\\?\\${sourcePath}` : sourcePath;
+    const destWithPrefix = process.platform === 'win32' ? `\\\\?\\${destPath}` : destPath;
+
+    cpSync(sourceWithPrefix, destWithPrefix, {recursive: true});
     this.logger.addLog(getTask(taskId, `Copied project files to the scan project`, "Completed"));
   }
 
@@ -387,7 +394,9 @@ export class OrtScan<T> {
     filesToCopy.forEach((file) => {
       const source = join(this.packagePath, file);
       const destination = join(outputPath, file);
-      copyFileSync(source, destination);
+      if(existsSync(source)) {
+        copyFileSync(source, destination);
+      }
     });
     this.logger.addLog(getTask(taskId, `Copied scan results to output directory`, "Completed"));
   }
