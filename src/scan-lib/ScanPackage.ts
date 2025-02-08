@@ -32,6 +32,7 @@ export class ScanPackage extends OrtScan<ScanPackageOptions> {
     if (!this.noEvaluationInScanResult()) {
       this.checkViolations();
     }
+    this.cleanUp();
   }
 
   /**

@@ -44,6 +44,7 @@ export class ScanGitProject extends OrtScan<ScanGitProjectOptions>{
     if (this.scanOptions.projectResultsPath) {
       this.copyResultsToOutputDir(this.scanOptions.projectResultsPath);
     }
+    this.cleanUp();
   }
 
   /**

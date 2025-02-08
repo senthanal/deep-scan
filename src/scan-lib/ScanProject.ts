@@ -33,6 +33,7 @@ export class ScanProject extends OrtScan<ScanProjectOptions> {
     if (this.scanOptions.projectResultsPath) {
       this.copyResultsToOutputDir(this.scanOptions.projectResultsPath);
     }
+    this.cleanUp();
   }
 
   /**

@@ -58,16 +58,11 @@ export class OrtScan<T> {
    * Docker image is built from the contents of the scan project directory.
    */
   protected createPackagePath(): void {
+    this.cleanUp();
     const taskId = this.getTaskId();
-    if (existsSync(this.packagePath)) {
-      this.logger.addLog(getTask(taskId, `Cleaning scan project directory`));
-      rmSync(this.packagePath, {recursive: true});
-      this.logger.addLog(getTask(taskId, `Scan project directory cleaned`, "Completed"));
-    }
-    const nextTaskId = this.getTaskId();
-    this.logger.addLog(getTask(nextTaskId, `Creating scan project directory`));
+    this.logger.addLog(getTask(taskId, `Creating scan project directory`));
     mkdirSync(this.packagePath);
-    this.logger.addLog(getTask(nextTaskId, `Scan project directory created`, "Completed"));
+    this.logger.addLog(getTask(taskId, `Scan project directory created`, "Completed"));
   }
 
   /**
@@ -229,5 +224,14 @@ export class OrtScan<T> {
       this.logger.addLog(getViolation(violation.rule, violation.pkg, violation.license, violation.licenseSource, violation.severity, violation.message));
     });
     this.logger.addLog(getTask(nextTaskId, `Violations logged`, "Completed"));
+  }
+
+  protected cleanUp(): void {
+    const taskId = this.getTaskId();
+    if (existsSync(this.packagePath)) {
+      this.logger.addLog(getTask(taskId, `Cleaning scan project directory`));
+      rmSync(this.packagePath, {recursive: true});
+      this.logger.addLog(getTask(taskId, `Scan project directory cleaned`, "Completed"));
+    }
   }
 }
