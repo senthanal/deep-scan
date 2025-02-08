@@ -37,6 +37,22 @@ npm install
 
 ### Usage
 
+Help command
+
+```sh
+npx @senthanal/deep-scan-cli@latest --help
+npx @senthanal/deep-scan-cli@latest gitProject --help
+npx @senthanal/deep-scan-cli@latest project --help
+npx @senthanal/deep-scan-cli@latest package --help
+```
+
+Scan ORT for a GIT project dependencies in compliance with the company policies
+
+```sh
+npx @senthanal/deep-scan-cli@latest gitProject -p <git project url> -q <git project branch> -c <git project config url> -d <git project config branch> -e <ORT config root folder within the repository> -r <ORT results path> -l <enable windows long path>
+
+```
+
 Scan ORT for the project dependencies in compliance with the company policies
 
 ```sh
