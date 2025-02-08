@@ -6,3 +6,4 @@ export * from './UILogger';
 export * from './TerminalLogger';
 export * from './ScanProject';
 export * from './ScanPackage';
+export * from './ScanGitProject';

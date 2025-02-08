@@ -108,7 +108,6 @@ export class ScanProject extends OrtScan<ScanProjectOptions> {
     });
     this.logger.addLog(getTask(taskId, `Copied scan results to output directory`, "Completed"));
   }
-
 }
 
 

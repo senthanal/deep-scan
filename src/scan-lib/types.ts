@@ -1,4 +1,5 @@
 export type CmdResponse = {
+  status: number | null;
   stdout: string;
   stderr: string;
 };
@@ -28,6 +29,16 @@ export type ScanProjectOptions = {
   projectPath: string;
   projectConfigPath: string;
   projectResultsPath?: string;
+};
+
+export type ScanGitProjectOptions = {
+  projectUrl: string;
+  projectConfigUrl: string;
+  projectBranch?: string;
+  projectConfigBranch?: string;
+  projectConfigFolder?: string;
+  projectResultsPath?: string;
+  enableLongPath?: boolean;
 };
 
 export type ScanPackageOptions = {

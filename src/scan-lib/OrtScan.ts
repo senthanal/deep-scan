@@ -1,10 +1,14 @@
 import {ScanLogger} from "./ScanLogger";
 import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "fs";
-import {join, resolve, normalize} from "path";
-import {PackageJson} from "type-fest";
-import {checkCmdError, cmd, fileToYaml, getTask, getViolation, yamlToJson} from "./utils";
-import {isScanPackageOptions, isScanProjectOptions} from "./types";
-import {cpSync, copyFileSync} from "node:fs";
+import {join, resolve} from "path";
+import {
+  checkCmdError,
+  cmd,
+  fileToYaml,
+  getTask,
+  getViolation, isDockerInstalled, isDockerRunning, isGitInstalled,
+  yamlToJson
+} from "./utils";
 
 export class OrtScan<T> {
   private readonly containerName = "deep-scan";
@@ -35,19 +39,17 @@ export class OrtScan<T> {
   protected checkDependencies() {
     const taskId = this.getTaskId();
     this.logger.addLog(getTask(taskId, `Checking dependencies needed for the scan`));
+    let conditions = [];
     // Check if git is installed and available in the command line
-    const responseGit = cmd("git --version");
-    if (responseGit.stderr) {
-      console.error("Git is not installed or not available in the command line");
-      process.exit(1);
-    }
+    conditions.push(isGitInstalled());
     // Check if docker is installed and available in the command line
-    const responseDocker = cmd("docker --version");
-    if (responseDocker.stderr) {
-      console.error("Docker is not installed or not available in the command line");
-      process.exit(1);
-    }
-    this.logger.addLog(getTask(taskId, `Dependencies checked`, "Completed"));
+    conditions.push(isDockerInstalled());
+    // Check if docker is running
+    conditions.push(isDockerRunning());
+
+    const failed = conditions.some(condition => !condition);
+    this.logger.addLog(getTask(taskId, `Dependencies checked`, failed ? "Failed" : "Completed"));
+    failed && process.exit(1);
   }
 
   /**
