@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Deep scan web app for the FOSS compliance of a npm package",
   "scripts": {
-    "serve": "bunx run --hot ./index.tsx"
+    "serve": "bunx run ./index.tsx",
+    "dev": "bunx run --hot ./index.tsx"
   },
   "keywords": [],
   "license": "MIT",

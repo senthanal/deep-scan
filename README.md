@@ -65,10 +65,17 @@ Scan ORT for validating a npm package in compliance with the company policies
 npx @senthanal/deep-scan-cli@latest package -p <package-name> -v <package-version> -c <ort-config-repo-url>
 ```
 
-### Testing the app
+### Testing the CLI
 
 ```sh
 npm test
+```
+
+## Bonus
+
+### Web Application to Scan a npm package
+```sh
+npm run serve
 ```
 
 ## Contributing
