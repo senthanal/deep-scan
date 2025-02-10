@@ -4,7 +4,7 @@ Primarily a node cli to scan project dependencies for license violations using O
 
 ## Motivation
 
-Typical scenario, ORT provides possibility of setting up the company software auditing policies. Running such a ORT scan in every PR commit increases build pipeline runtime drastically. This project aims to provide a solution to run ORT scan on the project dependencies and provide the results in a timely manner.
+The primary motivation behind this project is to automate the process of scanning project dependencies for license violations using OpenSource Review Toolkit(ORT) and to ensure that the project dependencies are in compliance with the company policies.
 
 ## Architecture
 
